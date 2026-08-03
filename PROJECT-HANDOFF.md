@@ -239,9 +239,11 @@ Phase 1B 已确认的关键规则：
 - 生产域名：`https://admin.shuanglongzhuangshi.cn`
 - 本地项目入口：`/Users/a0000/Documents/装修行业FDE`
 
+注意：上述本地主目录可能停留在其他分支，并包含用户自有、未跟踪的 `wecom-chat-pipeline/`。接手时不得删除、覆盖或强制重置该目录；优先在新目录中从 GitHub 检出交接分支。
+
 新账号登录后：
 
-1. 从 GitHub 获取 `codex/phase-1a-integration` 最新代码，不依赖旧 Codex 对话历史。
+1. 在新目录中从 GitHub 检出 `codex/phase-1a-integration` 最新代码，不依赖旧 Codex 对话历史。
 2. 首先阅读本文档和 Phase 1B 设计规格。
 3. 从“编写 Phase 1B 详细实施计划”继续，不直接跳过计划修改生产环境。
 4. 实施前再做一次只读审计，因为服务器状态、数据量和模型调用情况可能已变化。
