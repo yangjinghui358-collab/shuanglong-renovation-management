@@ -18,6 +18,8 @@ importers:
         specifier: ^3.2.0
         version: 3.2.7(@types/node@26.1.2)(jsdom@26.1.0)(msw@2.15.0(@types/node@26.1.2)(typescript@5.9.3))(tsx@4.23.1)
 
+  apps/agent-worker: {}
+
   apps/api:
     dependencies:
       '@shuanglong/contracts':
@@ -109,6 +111,12 @@ importers:
       vitest:
         specifier: ^3.2.0
         version: 3.2.7(@types/node@26.1.2)(jsdom@26.1.0)(msw@2.15.0(@types/node@26.1.2)(typescript@5.9.3))(tsx@4.23.1)
+
+  apps/wecom-pipeline:
+    dependencies:
+      pg:
+        specifier: ^8.22.0
+        version: 8.22.0
 
   packages/contracts:
     dependencies:

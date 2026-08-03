@@ -75,6 +75,8 @@
 apps/
   api/                 Fastify API、环境校验、看板与健康路由
   web/                 React 老板看板、演示 fixture、UI/E2E 测试
+  wecom-pipeline/      企业微信采集、回调、语音及底层处理
+  agent-worker/        Agent 审核、施工分析和同步任务入口
 packages/
   contracts/           前后端共享数据合约
   data-access/         演示读取器与 PostgreSQL 只读适配层
@@ -83,6 +85,7 @@ docs/
   runbooks/            本地预览、备份恢复和生产准备手册
   superpowers/         已确认的产品设计与实施计划
 infra/nginx/           admin 域名同源部署模板
+infra/systemd/         服务器服务与定时器基线
 scripts/               SSH 只读隧道和 PostgreSQL 只读校验脚本
 tests/shell/           发布安全检查
 PROJECT-HANDOFF.md     本交接文档
@@ -215,6 +218,7 @@ Phase 1B 已确认的关键规则：
 
 ## 10. GitHub 与交接规则
 
+- 本仓库是管理后台、API、企业微信管道、Agent 和服务器配置的唯一代码源。
 - GitHub 仓库应设为私有，未经审核不得转为公开。
 - 本次发布使用清洗后的全新 Git 历史，不上传早期可能包含客户/项目标识的本地提交对象。
 - 新开发应从 GitHub 默认分支创建 `codex/*` 功能分支，通过 PR 审查后合并。

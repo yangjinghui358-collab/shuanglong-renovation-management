@@ -10,10 +10,11 @@
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "test": "vitest --run",
+    "test:pipeline": "pnpm --filter @shuanglong/wecom-pipeline test",
     "test:shell": "bash tests/shell/check-readonly-postgres.test.sh && bash tests/shell/open-readonly-tunnel.test.sh && bash tests/shell/nginx-api-port.test.sh && bash tests/shell/release-gate.test.sh",
     "typecheck": "pnpm -r typecheck",
     "test:e2e": "pnpm --filter @shuanglong/web test:e2e",
-    "verify": "pnpm typecheck && pnpm test && pnpm test:shell && pnpm build && pnpm test:e2e"
+    "verify": "pnpm typecheck && pnpm test && pnpm test:pipeline && pnpm test:shell && pnpm build && pnpm test:e2e"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.0",

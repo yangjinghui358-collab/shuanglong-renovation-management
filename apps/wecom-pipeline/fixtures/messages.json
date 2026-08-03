@@ -1,0 +1,32 @@
+[
+  {
+    "msg_id": "mock-001",
+    "seq": 1,
+    "group_id": "demo-group-01",
+    "sender_id": "member-01",
+    "sender_name": "王老师",
+    "sent_at": "2026-07-23T08:30:00+08:00",
+    "msg_type": "text",
+    "content": "周六上午九点开展社区服务，请各队负责人明天下午五点前确认参与名单。"
+  },
+  {
+    "msg_id": "mock-002",
+    "seq": 2,
+    "group_id": "demo-group-01",
+    "sender_id": "member-02",
+    "sender_name": "李老师",
+    "sent_at": "2026-07-23T09:10:00+08:00",
+    "msg_type": "text",
+    "content": "收到，我负责汇总物资清单，7月25日前完成。"
+  },
+  {
+    "msg_id": "mock-003",
+    "seq": 3,
+    "group_id": "demo-group-01",
+    "sender_id": "member-03",
+    "sender_name": "陈老师",
+    "sent_at": "2026-07-23T10:05:00+08:00",
+    "msg_type": "text",
+    "content": "活动地点还需要和社区确认，确认后我发群里。"
+  }
+]

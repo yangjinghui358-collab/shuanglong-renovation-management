@@ -8,3 +8,13 @@ coverage/
 !.env.example
 wecom-chat-pipeline/
 发布文件/
+data/
+outputs/
+backups/
+*.db
+*.sqlite*
+*.dump
+*.log
+._*
+production.env
+apps/wecom-pipeline/deploy/production.env

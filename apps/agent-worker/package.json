@@ -1,0 +1,14 @@
+{
+  "name": "@shuanglong/agent-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "review": "node src/review.mjs",
+    "voice": "node src/voice.mjs",
+    "construction": "node src/construction.mjs",
+    "smartsheet": "node src/smartsheet.mjs",
+    "build": "node --check src/review.mjs && node --check src/voice.mjs && node --check src/construction.mjs && node --check src/smartsheet.mjs",
+    "typecheck": "node --check src/review.mjs && node --check src/voice.mjs && node --check src/construction.mjs && node --check src/smartsheet.mjs"
+  }
+}
