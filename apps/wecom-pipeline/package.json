@@ -1,0 +1,25 @@
+{
+  "name": "@shuanglong/wecom-pipeline",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "init": "node src/cli.js init",
+    "run:once": "node src/cli.js run-once",
+    "start": "node src/cli.js start",
+    "show": "node src/cli.js show",
+    "agent:status": "node src/cli.js agent-status",
+    "agent:test": "node src/cli.js agent-test",
+    "voice:sync": "node scripts/sync-voice-transcripts.mjs",
+    "agent:review": "node scripts/run-agent-review.mjs",
+    "construction:analyze": "node scripts/analyze-construction-progress.mjs",
+    "smartsheet:sync": "node scripts/sync-smartsheets.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "dependencies": {
+    "pg": "^8.22.0"
+  }
+}

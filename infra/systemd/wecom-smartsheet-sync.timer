@@ -1,0 +1,10 @@
+[Unit]
+Description=Sync WeCom Smart Sheets every five minutes
+
+[Timer]
+OnCalendar=*:0/5
+Persistent=true
+Unit=wecom-smartsheet-sync.service
+
+[Install]
+WantedBy=timers.target

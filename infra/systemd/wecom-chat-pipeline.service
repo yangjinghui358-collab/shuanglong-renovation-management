@@ -1,0 +1,19 @@
+[Unit]
+Description=WeCom chat archive pipeline
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/wecom-chat-pipeline
+EnvironmentFile=/etc/wecom-chat-pipeline/secrets.env
+ExecStart=/usr/bin/node /opt/wecom-chat-pipeline/src/cli.js start
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

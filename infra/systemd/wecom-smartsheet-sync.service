@@ -1,0 +1,14 @@
+[Unit]
+Description=Sync WeCom pipeline data to Smart Sheets
+After=network-online.target postgresql.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/opt/wecom-chat-pipeline
+EnvironmentFile=/etc/wecom-chat-pipeline/secrets.env
+ExecStart=/usr/bin/node /opt/wecom-chat-pipeline/scripts/sync-smartsheets.mjs
+NoNewPrivileges=true
+PrivateTmp=true
+
