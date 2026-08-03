@@ -14,6 +14,13 @@ describe("ProjectManagementPage",()=>{
     expect(screen.getByText("正式工地一号")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("row",{name:/正式工地一号/}));
     expect(screen.getByRole("heading",{name:"正式工地一号"})).toBeInTheDocument();
+    expect(screen.getByRole("region",{name:"整体施工流程"})).toBeInTheDocument();
+    expect(screen.getByText("拆除改造")).toBeInTheDocument();
+    expect(screen.getAllByText("水电施工").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("防水施工").length).toBeGreaterThan(0);
+    expect(screen.getByText("交付售后")).toBeInTheDocument();
+    expect(screen.getAllByText("当前施工").length).toBeGreaterThan(0);
+    expect(screen.getByText("下一阶段：")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button",{name:/验收记录/}));
     expect(screen.getByText("暂无验收记录")).toBeInTheDocument();
     await waitFor(()=>expect(fetch).toHaveBeenCalledWith("/api/modules/projects/records"));
