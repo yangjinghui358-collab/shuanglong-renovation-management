@@ -67,6 +67,18 @@ WECOM_ARCHIVE_COMMAND=/opt/wecom/bin/archive-adapter
 
 CorpID、会话存档 Secret、RSA 私钥等由适配器从腾讯云环境变量或密钥管理读取，不得写入本项目或输出到日志。
 
+### 自动补齐发送者微信名称（免费）
+
+会话存档消息本身只提供发送者 ID。启用联系人同步后，流水线通过企业微信官方通讯录和客户联系接口读取名称，写入新消息，并按发送者 ID 自动回填已有历史消息；此过程不调用 AI、不消耗 Token。
+
+```env
+WECOM_CORP_ID=企业ID
+WECOM_CONTACT_SYNC_ENABLED=true
+WECOM_CONTACT_SECRET=具有通讯录和客户联系读取权限的应用Secret
+```
+
+应用不可见范围内的联系人不会阻断消息采集，管理后台仍可由老板人工标注名称作为兜底。Secret 只能保存在服务器密钥文件中，不得提交 Git。
+
 ## 腾讯云运行
 
 将目录部署到现有腾讯云服务器，复制 `.env.example` 为 `.env` 并配置后运行：

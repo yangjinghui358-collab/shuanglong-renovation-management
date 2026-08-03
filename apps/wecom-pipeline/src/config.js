@@ -21,6 +21,8 @@ export function loadConfig(rootDir = process.cwd()) {
     digestEnabled: booleanEnv('DIGEST_ENABLED', true),
     wecomCorpId: env('WECOM_CORP_ID', ''),
     wecomAppSecret: env('WECOM_APP_SECRET', ''),
+    wecomContactSecret: env('WECOM_CONTACT_SECRET', ''),
+    wecomContactSyncEnabled: booleanEnv('WECOM_CONTACT_SYNC_ENABLED', false),
     wecomSenderUserId: env('WECOM_SENDER_USER_ID', ''),
     wecomGroupSendEnabled: booleanEnv('WECOM_GROUP_SEND_ENABLED', false),
     wecomCallbackEnabled: booleanEnv('WECOM_CALLBACK_ENABLED', false),

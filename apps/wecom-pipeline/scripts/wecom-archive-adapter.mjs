@@ -66,7 +66,8 @@ export function normalizeMessage(seq, message) {
     seq: Number(seq),
     group_id: message.roomid,
     sender_id: message.from || '',
-    sender_name: message.from || '',
+    // The archive payload only contains an ID. A separate contact lookup fills the name.
+    sender_name: '',
     sent_at: new Date(Number(message.msgtime)).toISOString(),
     msg_type: message.msgtype || 'unknown',
     content: extractContent(message),

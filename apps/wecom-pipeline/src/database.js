@@ -99,6 +99,18 @@ export function insertMessages(db, messages) {
   }
 }
 
+export function getSenderNames(db, senderIds) {
+  if (!senderIds.length) return {}
+  const placeholders = senderIds.map(() => '?').join(',')
+  const rows = db.prepare(`SELECT sender_id,max(sender_name) AS sender_name FROM messages
+    WHERE sender_id IN (${placeholders}) AND sender_name<>'' AND sender_name<>sender_id GROUP BY sender_id`).all(...senderIds)
+  return Object.fromEntries(rows.map(row => [row.sender_id, row.sender_name]))
+}
+
+export function updateSenderName(db, senderId, senderName) {
+  db.prepare(`UPDATE messages SET sender_name=? WHERE sender_id=? AND (sender_name='' OR sender_name=sender_id)`).run(senderName, senderId)
+}
+
 export function listMessages(db, groupId, start, end) {
   return db.prepare(`
     SELECT msg_id, seq, group_id, sender_id, sender_name, sent_at, msg_type, content
