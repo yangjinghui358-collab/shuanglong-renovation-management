@@ -8,6 +8,7 @@ const agentToken = required("AGENT_INGEST_TOKEN")
 const apiBaseUrl = (process.env.MANAGEMENT_API_BASE_URL || "http://127.0.0.1:3001").replace(/\/$/, "")
 const pool = new Pool({ connectionString: databaseUrl, max: 1 })
 
+async function main() {
 try {
   const result = await pool.query(`
     SELECT d.draft_id,d.dedupe_key,d.project_name,d.module_type,d.title,d.payload,
@@ -43,6 +44,12 @@ try {
 } finally {
   await pool.end()
 }
+}
+
+main().catch(error => {
+  console.error(error instanceof Error ? error.message : String(error))
+  process.exitCode = 1
+})
 
 function required(name) {
   const value = process.env[name]?.trim()

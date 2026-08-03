@@ -9,7 +9,13 @@
     "voice": "node src/voice.mjs",
     "construction": "node src/construction.mjs",
     "smartsheet": "node src/smartsheet.mjs",
-    "build": "node --check src/review.mjs && node --check src/voice.mjs && node --check src/construction.mjs && node --check src/smartsheet.mjs && node --check src/sync-review-candidates.mjs && node --check src/candidate-mapping.mjs",
+    "build": "node --check src/review.mjs && node --check src/voice.mjs && node --check src/construction.mjs && node --check src/smartsheet.mjs && node --check src/sync-review-candidates.mjs && node --check src/candidate-mapping.mjs && tsup",
     "typecheck": "node --check src/review.mjs && node --check src/voice.mjs && node --check src/construction.mjs && node --check src/smartsheet.mjs && node --check src/sync-review-candidates.mjs && node --check src/candidate-mapping.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0"
   }
 }
