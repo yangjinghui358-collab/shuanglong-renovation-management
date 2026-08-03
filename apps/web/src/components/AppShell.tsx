@@ -14,6 +14,8 @@ import {
   PackageSearch,
   Settings,
   Sparkles,
+  Bot,
+  BellRing,
   UsersRound,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -28,10 +30,13 @@ const navItems: Array<{ label: string; path: string; icon: LucideIcon; badge?: s
   { label: "财务中心", path: "/finance", icon: CircleDollarSign },
   { label: "库存管理", path: "/inventory", icon: Boxes },
   { label: "员工排班", path: "/schedule", icon: CalendarClock },
+  { label: "Agent 中心", path: "/agents", icon: Bot },
   { label: "AI 待确认", path: "/ai-review", icon: ClipboardCheck, badge: "6" },
+  { label: "最近待办", path: "/tasks", icon: CalendarClock },
+  { label: "老板要情", path: "/alerts", icon: BellRing },
   { label: "系统设置", path: "/settings", icon: Settings },
 ];
-const rolePaths={owner:null,management:new Set(["/","/projects","/materials","/customers","/schedule"]),employee:new Set(["/","/projects","/schedule"])} as const;
+const rolePaths={owner:null,management:new Set(["/","/projects","/materials","/customers","/inventory","/schedule","/tasks"]),employee:new Set(["/","/projects","/schedule","/tasks"])} as const;
 const roleLabels={owner:"老板账号",management:"管理层账号",employee:"员工账号"} as const;
 
 export function AppShell({ children,role="owner" }: { children: ReactNode;role?:keyof typeof rolePaths }) {

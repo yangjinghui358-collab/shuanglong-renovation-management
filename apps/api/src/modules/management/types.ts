@@ -1,5 +1,6 @@
 export type Role = "owner" | "management" | "employee";
-export type CandidateModule = "projects" | "procurement" | "crm";
+export type CandidateModule = "projects" | "procurement" | "crm" | "finance" | "inventory" | "tasks" | "alerts";
+export type AgentKey = "chat_archive" | "todo_reminder" | "owner_alert";
 
 export interface AuthUser { id: string; phone: string; role: Role; mustChangePassword: boolean }
 export interface AgentCandidate {
@@ -22,4 +23,6 @@ export interface ManagementStore {
   confirmCandidate(id: string, version: number, idempotencyKey: string, actorId: string, payload?: Record<string, unknown>): Promise<AgentCandidate>;
   rejectCandidate(id: string, version: number, actorId: string, reason: string): Promise<AgentCandidate>;
   listModuleRecords(module: CandidateModule): Promise<Array<Record<string, unknown>>>;
+  queueAgentRun(agentKey: AgentKey, actorId: string): Promise<Record<string, unknown>>;
+  listAgentRuns(): Promise<Array<Record<string, unknown>>>;
 }

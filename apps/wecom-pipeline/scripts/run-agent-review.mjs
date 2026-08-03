@@ -5,11 +5,13 @@ import { fileURLToPath } from 'node:url'
 import { loadConfig } from '../src/config.js'
 import { openPostgresDatabase } from '../src/database-postgres.js'
 
-const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const moduleUrl = import.meta.url
+const rootDir = process.env.WECOM_PIPELINE_ROOT || (moduleUrl ? path.resolve(path.dirname(fileURLToPath(moduleUrl)), '..') : '/opt/wecom-chat-pipeline')
 const config = loadConfig(rootDir)
 if (config.databaseDriver !== 'postgres') throw new Error('Agent 审核仅使用 PostgreSQL')
 if (!config.aiBaseUrl || !config.aiApiKey || !config.aiModel) throw new Error('AI 尚未配置')
 
+async function main() {
 const db = await openPostgresDatabase(config)
 const startedAt = Date.now()
 let apiStatus = 'failed'
@@ -35,7 +37,7 @@ try {
   ).join('\n')
   const systemPrompt = `${activePrompt?.system_prompt || ''}\n
 你要模拟装修项目管理后台的AI审核助手。结合完整上下文合并重复信息，按业务板块生成候选记录。
-允许的module_type只有：event、construction_progress、todo、risk、customer_requirement、material、acceptance、digest。
+允许的module_type只有：event、construction_progress、todo、risk、customer_requirement、material、procurement、financial_record、inventory_record、acceptance、digest。
 所有事实必须有聊天ref证据，只能使用输入中存在的M编号。禁止猜测不存在的金额、日期、负责人和完成状态；推算内容必须在reasoning中明确写“推算”。
 每个实际事项只保留一条；闲聊、测试系统、拉人进群等非施工业务不得生成正式候选。
 digest必须且只能有一条，概括当前项目状态、已完成、进行中、待确认、风险和下一步。
@@ -61,7 +63,7 @@ digest必须且只能有一条，概括当前项目状态、已完成、进行�
   const parsed = parseJson(body.choices?.[0]?.message?.content || '')
   const messageById = new Map(messages.map(item => [item.msg_id, item]))
   const messageIdByRef = new Map(messagesWithRefs.map(item => [item.ref, item.msg_id]))
-  const allowedModules = new Set(['event','construction_progress','todo','risk','customer_requirement','material','acceptance','digest'])
+  const allowedModules = new Set(['event','construction_progress','todo','risk','customer_requirement','material','procurement','financial_record','inventory_record','acceptance','digest'])
   const drafts = (Array.isArray(parsed.drafts) ? parsed.drafts : []).filter(item =>
     allowedModules.has(item.module_type) && String(item.title || '').trim()
   )
@@ -119,6 +121,12 @@ digest必须且只能有一条，概括当前项目状态、已完成、进行�
   ]).catch(() => {})
   await db.end()
 }
+}
+
+main().catch(error => {
+  console.error(error instanceof Error ? error.message : String(error))
+  process.exitCode = 1
+})
 
 function parseJson(value) {
   const text = String(value).trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '')
