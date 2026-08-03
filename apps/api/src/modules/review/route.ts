@@ -5,7 +5,7 @@ import type { AgentKey, CandidateModule, ManagementStore } from "../management/t
 
 const candidateModules: CandidateModule[] = ["projects","procurement","crm","finance","inventory","tasks","alerts"];
 const agentKeys: AgentKey[] = ["chat_archive","todo_reminder","owner_alert"];
-export interface CandidateEvidenceReader { readMessages(ids:string[]):Promise<Array<{id:string;senderName:string;sentAt:string;messageType:string;content:string}>> }
+export interface CandidateEvidenceReader { readMessages(ids:string[]):Promise<Array<{id:string;senderId:string;senderName:string;sentAt:string;messageType:string;content:string}>> }
 
 function safeToken(actual: string, expected: string): boolean {
   const a = Buffer.from(actual), e = Buffer.from(expected); return a.length === e.length && timingSafeEqual(a, e);
@@ -37,8 +37,10 @@ export function registerReviewRoutes(app: FastifyInstance, store: ManagementStor
     if(!evidenceReader)return reply.code(503).send({error:"聊天证据服务暂不可用"});
     const item=await store.findCandidate((request.params as{id:string}).id);if(!item)return reply.code(404).send({error:"候选不存在"});
     const ids=Array.isArray(item.payload.sourceMessageIds)?item.payload.sourceMessageIds.filter((value):value is string=>typeof value==="string").slice(0,30):[];
-    return{items:await evidenceReader.readMessages(ids),total:ids.length};
+    const messages=await evidenceReader.readMessages(ids);const aliases=await store.getSenderAliases([...new Set(messages.map(message=>message.senderId))]);
+    return{items:messages.map(message=>({...message,senderName:aliases[message.senderId]||(message.senderName!==message.senderId?message.senderName:"")})),total:ids.length};
   });
+  app.put("/api/evidence/senders/:id/alias",async(request,reply)=>{const user=await owner(request,reply,store);if(!user)return;const senderId=(request.params as{id:string}).id;const displayName=String((request.body as{displayName?:string})?.displayName??"").trim();if(!senderId||senderId.length>200||!displayName||displayName.length>50)return reply.code(400).send({error:"姓名应为 1 至 50 个字符"});return store.upsertSenderAlias(senderId,displayName,user.id);});
   app.post("/api/review/candidates/:id/confirm", async (request, reply) => {
     const user = await owner(request, reply, store); if (!user) return;
     const b = request.body as { version?: number; idempotencyKey?: string; payload?: Record<string, unknown> };
