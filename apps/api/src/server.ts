@@ -1,8 +1,8 @@
 import { Pool } from "pg";
 
 import {
-  createDemoOperationsReader,
   createWecomDashboardReader,
+  type DashboardReader,
 } from "@shuanglong/data-access";
 
 import { buildApp } from "./app";
@@ -17,10 +17,14 @@ async function start(): Promise<void> {
   const managementStore = new PostgresManagementStore(managementPool);
   await managementStore.initialize();
   await managementStore.bootstrapOwner(env.ADMIN_PHONE, await hashPassword(env.ADMIN_INITIAL_PASSWORD));
-  const startedAt = new Date();
+  const emptyFormalReader: DashboardReader = { async read() { return {
+    sourceFreshness:{lastMessageAt:null,status:"confirmed",statusLabel:"已确认"},
+    digest:{title:"经营简报",summary:"当前暂无正式简报。",evidence:[],status:"confirmed",statusLabel:"已确认"},
+    metrics:[],projects:[],materials:[],leads:[],approvals:[],
+  }; } };
   const app = buildApp({
     realReader: createWecomDashboardReader(pool),
-    demoReader: createDemoOperationsReader(startedAt),
+    demoReader: emptyFormalReader,
     now: () => new Date(),
     managementStore,
     agentIngestToken: env.AGENT_INGEST_TOKEN,

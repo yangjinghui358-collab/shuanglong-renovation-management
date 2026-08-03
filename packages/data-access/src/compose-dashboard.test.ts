@@ -106,24 +106,16 @@ describe("composeOwnerDashboard", () => {
     });
   });
 
-  it("returns an explicitly degraded demo snapshot when the real reader fails", async () => {
+  it("fails closed when the formal data source is unavailable", async () => {
     const unavailable: DashboardReader = {
       async read() { throw new Error("database unavailable"); },
     };
 
-    const result: OwnerDashboard = await composeOwnerDashboard(
+    await expect(composeOwnerDashboard(
       unavailable,
       reader(demoSnapshot),
       fixedNow,
-    );
-
-    expect(result.sourceFreshness).toMatchObject({
-      status: "demo",
-      statusLabel: "真实数据暂不可用",
-      lastMessageAt: null,
-    });
-    expect(result.projects).toEqual([]);
-    expect(result.materials[0]?.statusLabel).toBe("演示数据");
+    )).rejects.toThrow("正式数据源暂不可用");
   });
 
   it("uses the demo digest when the real source has no digest row", async () => {

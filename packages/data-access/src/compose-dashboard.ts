@@ -114,20 +114,8 @@ export async function composeOwnerDashboard(
   let real: DashboardSnapshot;
   try {
     real = await realReader.read();
-  } catch {
-    const sourceFreshness: OwnerDashboard["sourceFreshness"] = {
-      lastMessageAt: null,
-      status: "demo",
-      statusLabel: "真实数据暂不可用",
-    };
-    const fallback = {
-      generatedAt: now.toISOString(),
-      ...demo,
-      digest: demo.digest,
-      sourceFreshness,
-      metrics: composeMetrics(demo, sourceFreshness),
-    };
-    return OwnerDashboardSchema.parse(fallback);
+  } catch (error) {
+    throw new Error("正式数据源暂不可用", { cause: error });
   }
 
   const domains = {

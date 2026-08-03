@@ -68,7 +68,7 @@ export function AppShell({ children,role="owner" }: { children: ReactNode;role?:
             <strong>双龙装饰 · AI 经营管理中心</strong>
           </div>
           <div className="topbar-spacer" />
-          <span className="secure-state"><BadgeCheck size={16} aria-hidden="true" />只读预览</span>
+          <span className="secure-state"><BadgeCheck size={16} aria-hidden="true" />权限保护</span>
           <button className="owner-profile" type="button" aria-label="打开老板账户菜单">
             <span className="owner-avatar">龙</span>
             <span><strong>{roleLabels[role]}</strong><small>{role==="owner"?"经营总览":"岗位视图"}</small></span>
@@ -85,10 +85,10 @@ export function ModulePreview({ title }: { title: string }) {
   return (
     <section className="module-preview">
       <div className="module-preview__icon"><BriefcaseBusiness size={28} /></div>
-      <span className="eyebrow">PHASE 1A · 功能预览</span>
+      <span className="eyebrow">正式功能模块</span>
       <h1>{title}</h1>
-      <p>该模块已纳入统一经营平台规划，当前阶段先展示老板工作台与只读经营数据。</p>
-      <span className="preview-chip">即将开放</span>
+      <p>该模块正在独立开发中；开发和发布不会影响当前已上线功能。</p>
+      <span className="preview-chip">建设中</span>
     </section>
   );
 }

@@ -53,7 +53,7 @@ describe("owner dashboard API", () => {
     });
   });
 
-  it("labels dashboard fallback and reports degraded health when the database fails", async () => {
+  it("fails closed and reports degraded health when the formal database fails", async () => {
     const unavailable: DashboardReader = {
       async read() { throw new Error("database unavailable"); },
     };
@@ -69,8 +69,7 @@ describe("owner dashboard API", () => {
       app.inject({ method: "GET", url: "/api/health" }),
     ]);
 
-    expect(dashboard.statusCode).toBe(200);
-    expect(dashboard.json().sourceFreshness.statusLabel).toBe("真实数据暂不可用");
+    expect(dashboard.statusCode).toBe(500);
     expect(health.statusCode).toBe(200);
     expect(health.json()).toEqual({
       status: "degraded",
