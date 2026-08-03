@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   BadgeCheck,
@@ -31,7 +31,7 @@ const navItems: Array<{ label: string; path: string; icon: LucideIcon; badge?: s
   { label: "库存管理", path: "/inventory", icon: Boxes },
   { label: "员工排班", path: "/schedule", icon: CalendarClock },
   { label: "Agent 中心", path: "/agents", icon: Bot },
-  { label: "AI 待确认", path: "/ai-review", icon: ClipboardCheck, badge: "6" },
+  { label: "AI 待确认", path: "/ai-review", icon: ClipboardCheck },
   { label: "最近待办", path: "/tasks", icon: CalendarClock },
   { label: "老板要情", path: "/alerts", icon: BellRing },
   { label: "系统设置", path: "/settings", icon: Settings },
@@ -40,6 +40,8 @@ const rolePaths={owner:null,management:new Set(["/","/projects","/materials","/c
 const roleLabels={owner:"老板账号",management:"管理层账号",employee:"员工账号"} as const;
 
 export function AppShell({ children,role="owner" }: { children: ReactNode;role?:keyof typeof rolePaths }) {
+  const[pendingCount,setPendingCount]=useState(0);
+  useEffect(()=>{if(role!=="owner")return;const load=()=>fetch("/api/review/candidates").then(r=>r.ok?r.json():null).then(body=>{if(body)setPendingCount(body.items?.length??0)}).catch(()=>undefined);void load();const listener=(event:Event)=>setPendingCount(Number((event as CustomEvent).detail)||0);window.addEventListener("review-count-changed",listener);const timer=setInterval(()=>void load(),30000);return()=>{window.removeEventListener("review-count-changed",listener);clearInterval(timer)}},[role]);
   const visibleItems=rolePaths[role]?navItems.filter(item=>rolePaths[role]!.has(item.path)):navItems;
   return (
     <div className="app-shell">
@@ -56,7 +58,7 @@ export function AppShell({ children,role="owner" }: { children: ReactNode;role?:
             <NavLink key={path} to={path} end={path === "/"} className={({ isActive }) => `nav-item${isActive ? " is-active" : ""}`}>
               <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
               <span>{label}</span>
-              {item.badge ? <span className="nav-badge">{item.badge}</span> : null}
+              {path==="/ai-review"&&pendingCount>0 ? <span className="nav-badge">{pendingCount}</span> : null}
               <ChevronRight className="nav-chevron" size={15} aria-hidden="true" />
             </NavLink>
           ))}

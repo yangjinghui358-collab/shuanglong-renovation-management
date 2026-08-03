@@ -1,11 +1,14 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
+import { http, HttpResponse } from "msw";
+import { server } from "../test/server";
 import { AppShell } from "./AppShell";
 import { DataStatusTag } from "./DataStatusTag";
 
 describe("AppShell", () => {
-  it("keeps the brand and primary route discoverable in the executive shell", () => {
+  it("keeps the brand and primary route discoverable in the executive shell", async () => {
+    server.use(http.get("/api/review/candidates",()=>HttpResponse.json({items:Array.from({length:29},(_,id)=>({id}))})));
     render(
       <MemoryRouter>
         <AppShell><div>页面内容</div></AppShell>
@@ -16,6 +19,7 @@ describe("AppShell", () => {
     expect(screen.getByRole("navigation", { name: "主导航" })).toBeVisible();
     expect(screen.getByText("老板首页")).toBeVisible();
     expect(screen.getByText("页面内容")).toBeVisible();
+    expect(await screen.findByText("29")).toBeVisible();
   });
 
   it.each([
