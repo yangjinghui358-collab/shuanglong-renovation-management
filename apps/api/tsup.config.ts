@@ -7,5 +7,5 @@ export default defineConfig({
   target: "node22",
   clean: true,
   outDir: "dist",
-  noExternal: ["@shuanglong/contracts", "@shuanglong/data-access"],
+  noExternal: ["@shuanglong/contracts", "@shuanglong/data-access", "pg"],
 });

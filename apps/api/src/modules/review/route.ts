@@ -9,7 +9,7 @@ function safeToken(actual: string, expected: string): boolean {
 async function owner(request: FastifyRequest, reply: FastifyReply, store: ManagementStore) {
   const user = await authenticate(request, store);
   if (!user) { reply.code(401).send({ error: "未登录" }); return null; }
-  if (user.role !== "owner" && user.role !== "admin") { reply.code(403).send({ error: "权限不足" }); return null; }
+  if (user.role !== "owner") { reply.code(403).send({ error: "权限不足" }); return null; }
   return user;
 }
 export function registerReviewRoutes(app: FastifyInstance, store: ManagementStore, agentToken: string): void {

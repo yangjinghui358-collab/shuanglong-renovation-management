@@ -9,5 +9,5 @@ export function App() {
   if(loading)return null;
   if(!user)return <LoginPage/>;
   if(user.mustChangePassword)return <ChangePasswordPage/>;
-  return <AppShell><Outlet /></AppShell>;
+  return <AppShell role={user.role}><Outlet /></AppShell>;
 }
