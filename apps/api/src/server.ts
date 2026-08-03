@@ -28,7 +28,7 @@ async function start(): Promise<void> {
     now: () => new Date(),
     managementStore,
     agentIngestToken: env.AGENT_INGEST_TOKEN,
-    candidateEvidenceReader:{async readMessages(ids){if(!ids.length)return[];const r=await pool.query(`SELECT msg_id AS id,coalesce(nullif(sender_name,''),sender_id,'未知发送人') AS sender_name,sent_at,msg_type,left(content,4000) AS content FROM messages WHERE msg_id=ANY($1::text[]) ORDER BY sent_at,seq`,[ids]);return r.rows.map(row=>({id:row.id,senderName:row.sender_name,sentAt:new Date(row.sent_at).toISOString(),messageType:row.msg_type,content:row.content}))}},
+    candidateEvidenceReader:{async readMessages(ids){if(!ids.length)return[];const r=await pool.query(`SELECT msg_id AS id,sender_id,coalesce(nullif(sender_name,''),sender_id,'') AS sender_name,sent_at,msg_type,left(content,4000) AS content FROM messages WHERE msg_id=ANY($1::text[]) ORDER BY sent_at,seq`,[ids]);return r.rows.map(row=>({id:row.id,senderId:row.sender_id,senderName:row.sender_name,sentAt:new Date(row.sent_at).toISOString(),messageType:row.msg_type,content:row.content}))}},
   });
 
   const port = Number(process.env.PORT ?? 3001);

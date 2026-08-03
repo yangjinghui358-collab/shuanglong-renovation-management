@@ -26,4 +26,6 @@ export interface ManagementStore {
   listModuleRecords(module: CandidateModule): Promise<Array<Record<string, unknown>>>;
   queueAgentRun(agentKey: AgentKey, actorId: string): Promise<Record<string, unknown>>;
   listAgentRuns(): Promise<Array<Record<string, unknown>>>;
+  getSenderAliases(senderIds: string[]): Promise<Record<string,string>>;
+  upsertSenderAlias(senderId:string,displayName:string,actorId:string):Promise<{senderId:string;displayName:string}>;
 }
