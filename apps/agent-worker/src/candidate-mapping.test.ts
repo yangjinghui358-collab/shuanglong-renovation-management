@@ -7,6 +7,8 @@ describe("chat draft candidate mapping", () => {
     ["risk", "projects"],
     ["material", "procurement"],
     ["customer_requirement", "crm"],
+    ["financial_record", "finance"],
+    ["inventory_record", "inventory"],
   ])("maps %s to %s", (kind, module) => expect(targetModule(kind)).toBe(module));
 
   it("keeps evidence ids without copying message excerpts", () => {

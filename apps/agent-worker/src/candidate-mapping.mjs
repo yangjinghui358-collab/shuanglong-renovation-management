@@ -7,6 +7,9 @@ const MODULE_MAP = Object.freeze({
   digest: "projects",
   material: "procurement",
   customer_requirement: "crm",
+  financial_record: "finance",
+  inventory_record: "inventory",
+  procurement: "procurement",
 })
 
 export function targetModule(moduleType) {

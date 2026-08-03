@@ -1,8 +1,8 @@
 [Unit]
-Description=Extract WeCom chat facts every fifteen minutes
+Description=Run queued management Agents every minute
 
 [Timer]
-OnCalendar=*:0/15
+OnCalendar=*-*-* *:*:00
 Persistent=true
 RandomizedDelaySec=30
 Unit=shuanglong-agent-review.service
