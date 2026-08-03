@@ -10,40 +10,7 @@ afterEach(() => {
 });
 
 describe("fetchOwnerDashboard", () => {
-  it("returns an explicitly demo-only dashboard when enabled and the API request fails", async () => {
-    vi.stubEnv("VITE_ENABLE_DEMO_FALLBACK", "true");
-    server.use(
-      http.get("/api/dashboard/owner", () =>
-        HttpResponse.json({ message: "not found" }, { status: 404 }),
-      ),
-    );
-
-    const result = await fetchOwnerDashboard();
-    const records = [
-      result.digest,
-      ...result.metrics,
-      ...result.projects,
-      ...result.materials,
-      ...result.leads,
-      ...result.approvals,
-    ];
-
-    expect(result.sourceFreshness).toEqual({
-      lastMessageAt: null,
-      status: "demo",
-      statusLabel: "真实数据暂不可用",
-    });
-    expect(records.length).toBeGreaterThan(0);
-    expect(
-      records.every(
-        (record) =>
-          record.status === "demo" && record.statusLabel === "演示数据",
-      ),
-    ).toBe(true);
-  });
-
-  it("still rejects an API failure when demo fallback is disabled", async () => {
-    vi.stubEnv("VITE_ENABLE_DEMO_FALLBACK", "false");
+  it("rejects an API failure without substituting synthetic records", async () => {
     server.use(
       http.get("/api/dashboard/owner", () =>
         HttpResponse.json({ message: "not found" }, { status: 404 }),
@@ -55,8 +22,7 @@ describe("fetchOwnerDashboard", () => {
     );
   });
 
-  it("does not hide a malformed successful API payload behind demo fallback", async () => {
-    vi.stubEnv("VITE_ENABLE_DEMO_FALLBACK", "true");
+  it("rejects a malformed successful API payload", async () => {
     server.use(
       http.get("/api/dashboard/owner", () =>
         HttpResponse.json({ generatedAt: "bad" }),

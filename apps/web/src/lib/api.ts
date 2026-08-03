@@ -1,5 +1,4 @@
 import { OwnerDashboardSchema, type OwnerDashboard } from "@shuanglong/contracts";
-import { demoOwnerDashboardFixture } from "../fixtures/ownerDashboardFixture";
 
 const INVALID_PAYLOAD_MESSAGE = "经营数据格式异常，请稍后重试";
 
@@ -35,9 +34,6 @@ export async function fetchOwnerDashboard(): Promise<OwnerDashboard> {
     return parsed.data;
   } catch (error) {
     if (error instanceof InvalidDashboardPayloadError) throw error;
-    if (import.meta.env.VITE_ENABLE_DEMO_FALLBACK === "true") {
-      return demoOwnerDashboardFixture;
-    }
     throw new Error("经营数据暂时无法加载，请稍后重试");
   }
 }
