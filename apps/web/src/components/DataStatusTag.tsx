@@ -2,7 +2,7 @@ import type { DataStatus } from "@shuanglong/contracts";
 
 const labels: Record<DataStatus, string> = {
   real: "真实数据",
-  demo: "演示数据",
+  demo: "待录入",
   ai_inferred: "AI 推测",
   pending_confirmation: "待确认",
   confirmed: "已确认",
@@ -14,7 +14,7 @@ export function DataStatusTag({ status, label }: { status: DataStatus; label?: s
   return (
     <span className={`data-status data-status--${status}`} data-status={status}>
       <span className="data-status__dot" aria-hidden="true" />
-      {label ?? labels[status]}
+      {status === "demo" ? labels.demo : (label ?? labels[status])}
     </span>
   );
 }

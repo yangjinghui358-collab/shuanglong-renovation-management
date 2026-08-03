@@ -25,7 +25,7 @@ describe("OwnerDashboardPage", () => {
     expect(screen.getByRole("heading", { name: "老板待确认" })).toBeVisible();
     expect(screen.getByText("测试项目整装报价")).toBeVisible();
     expect(screen.getByRole("heading", { name: "成交机会" })).toBeVisible();
-    expect(screen.getAllByText("演示数据").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("待录入").length).toBeGreaterThan(0);
     expect(screen.getByText(/最后消息/)).toHaveTextContent("08月02日 22:40");
   });
 
@@ -58,6 +58,6 @@ describe("OwnerDashboardPage", () => {
     expect(await screen.findByText("真实数据暂不可用")).toBeVisible();
     expect(screen.getByRole("heading", { name: "经营总览" }).parentElement).toHaveTextContent("0 个高风险工地和 0 项待确认");
     expect(screen.queryByRole("button", { name: /处理/ })).not.toBeInTheDocument();
-    expect(screen.getAllByText("仅演示").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("待正式录入").length).toBeGreaterThan(0);
   });
 });

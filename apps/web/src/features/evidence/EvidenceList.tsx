@@ -7,7 +7,7 @@ const sourceLabels: Record<DashboardEvidence["sourceType"], string> = {
   todo: "业务待办",
   risk: "风险记录",
   event: "项目事件",
-  demo: "演示来源",
+  demo: "系统记录",
 };
 
 const dateTime = new Intl.DateTimeFormat("zh-CN", {

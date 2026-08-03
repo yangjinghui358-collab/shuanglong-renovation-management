@@ -15,7 +15,7 @@ export function ApprovalQueue({ approvals }: { approvals: OwnerDashboard["approv
           <article className="approval-row" key={approval.id}>
             <span className="approval-icon"><FileCheck2 size={17} /></span>
             <div><span className="item-type">{approval.type}</span><strong>{approval.title}</strong><DataStatusTag status={approval.status} label={approval.statusLabel} /></div>
-            <div className="approval-value"><strong>{approval.amount === null ? "待协调" : currency.format(approval.amount)}</strong>{approval.status === "demo" ? <span>仅演示</span> : <button type="button" aria-label={`处理 ${approval.title}`}><ArrowRight size={16} /></button>}</div>
+            <div className="approval-value"><strong>{approval.amount === null ? "待协调" : currency.format(approval.amount)}</strong>{approval.status === "demo" ? <span>待正式录入</span> : <button type="button" aria-label={`处理 ${approval.title}`}><ArrowRight size={16} /></button>}</div>
           </article>
         ))}
       </div>
