@@ -6,11 +6,11 @@ import {
 } from "./modules/dashboard/route";
 import { registerHealthRoute } from "./modules/health/route";
 import { registerAuthRoutes } from "./modules/auth/route";
-import { registerReviewRoutes } from "./modules/review/route";
+import { registerReviewRoutes, type CandidateEvidenceReader } from "./modules/review/route";
 import type { ManagementStore } from "./modules/management/types";
 import { authenticate } from "./modules/auth/route";
 
-export type AppDependencies = DashboardRouteDependencies & { managementStore?: ManagementStore; agentIngestToken?: string };
+export type AppDependencies = DashboardRouteDependencies & { managementStore?: ManagementStore; agentIngestToken?: string;candidateEvidenceReader?:CandidateEvidenceReader };
 
 export function buildApp(dependencies: AppDependencies): FastifyInstance {
   const app = Fastify({ logger: false });
@@ -25,7 +25,7 @@ export function buildApp(dependencies: AppDependencies): FastifyInstance {
   registerHealthRoute(app, dependencies.realReader);
   if (dependencies.managementStore && dependencies.agentIngestToken) {
     registerAuthRoutes(app, dependencies.managementStore);
-    registerReviewRoutes(app, dependencies.managementStore, dependencies.agentIngestToken);
+    registerReviewRoutes(app, dependencies.managementStore, dependencies.agentIngestToken,dependencies.candidateEvidenceReader);
   }
   return app;
 }

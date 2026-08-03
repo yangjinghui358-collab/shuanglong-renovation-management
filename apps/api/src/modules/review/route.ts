@@ -5,6 +5,7 @@ import type { AgentKey, CandidateModule, ManagementStore } from "../management/t
 
 const candidateModules: CandidateModule[] = ["projects","procurement","crm","finance","inventory","tasks","alerts"];
 const agentKeys: AgentKey[] = ["chat_archive","todo_reminder","owner_alert"];
+export interface CandidateEvidenceReader { readMessages(ids:string[]):Promise<Array<{id:string;senderName:string;sentAt:string;messageType:string;content:string}>> }
 
 function safeToken(actual: string, expected: string): boolean {
   const a = Buffer.from(actual), e = Buffer.from(expected); return a.length === e.length && timingSafeEqual(a, e);
@@ -22,7 +23,7 @@ async function moduleUser(request: FastifyRequest, reply: FastifyReply, store: M
   if (user.role === "management" && ["finance","alerts"].includes(module)) { reply.code(403).send({ error: "权限不足" }); return null; }
   return user;
 }
-export function registerReviewRoutes(app: FastifyInstance, store: ManagementStore, agentToken: string): void {
+export function registerReviewRoutes(app: FastifyInstance, store: ManagementStore, agentToken: string, evidenceReader?:CandidateEvidenceReader): void {
   app.post("/api/agent/candidates", async (request, reply) => {
     const bearer = request.headers.authorization?.replace(/^Bearer\s+/i, "") ?? "";
     if (!bearer || !safeToken(bearer, agentToken)) return reply.code(401).send({ error: "Agent 凭据无效" });
@@ -31,6 +32,13 @@ export function registerReviewRoutes(app: FastifyInstance, store: ManagementStor
     return reply.code(201).send(await store.createCandidate({ module: b.module, kind: b.kind, payload: b.payload, confidence: Math.max(0, Math.min(1, Number(b.confidence ?? 0))) }, b.sourceKey));
   });
   app.get("/api/review/candidates", async (request, reply) => { if (!(await owner(request, reply, store))) return; return { items: await store.listCandidates() }; });
+  app.get("/api/review/candidates/:id/evidence",async(request,reply)=>{
+    if(!(await owner(request,reply,store)))return;
+    if(!evidenceReader)return reply.code(503).send({error:"聊天证据服务暂不可用"});
+    const item=await store.findCandidate((request.params as{id:string}).id);if(!item)return reply.code(404).send({error:"候选不存在"});
+    const ids=Array.isArray(item.payload.sourceMessageIds)?item.payload.sourceMessageIds.filter((value):value is string=>typeof value==="string").slice(0,30):[];
+    return{items:await evidenceReader.readMessages(ids),total:ids.length};
+  });
   app.post("/api/review/candidates/:id/confirm", async (request, reply) => {
     const user = await owner(request, reply, store); if (!user) return;
     const b = request.body as { version?: number; idempotencyKey?: string; payload?: Record<string, unknown> };

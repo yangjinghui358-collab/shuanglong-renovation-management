@@ -3,6 +3,7 @@ import { useEffect,useMemo,useState } from "react";
 import "./review.css";
 
 type Candidate={id:string;module:string;kind:string;payload:Record<string,unknown>;confidence:number;status:string;version:number;createdAt:string};
+type EvidenceMessage={id:string;senderName:string;sentAt:string;messageType:string;content:string};
 const moduleLabels:Record<string,string>={projects:"工地管理",procurement:"主材采购",crm:"客户销售",finance:"财务中心",inventory:"库存管理",tasks:"最近待办",alerts:"老板要情"};
 const kindLabels:Record<string,string>={digest:"项目简报",construction_progress:"施工进度",todo:"工地待办",event:"工地事件",acceptance:"验收事项",risk:"问题风险",material:"材料事项",procurement:"采购事项",customer_requirement:"客户需求",financial_record:"财务记录",inventory_record:"库存记录",todo_reminder:"待办提醒",owner_alert:"重要风险"};
 const fieldLabels:Record<string,string>={summary:"事件摘要",details:"详细说明",description:"问题说明",owner:"负责人",status:"当前状态",event_date:"发生日期",eventDate:"发生日期",due_date:"截止日期",dueDate:"截止日期",dueAt:"要求时间",phase:"施工阶段",location:"施工位置",progress:"完成进度",risk_level:"风险等级",riskLevel:"风险等级",recommendation:"处理建议",priority:"优先级",next_action:"下一步",nextAction:"下一步",planned_start:"计划开始",planned_end:"计划结束"};
@@ -34,10 +35,16 @@ function ReviewCard({item,busy,onDecision}:{item:Candidate;busy:boolean;onDecisi
     <div className="review-title"><div><small>{projectName||"公司经营事项"}</small><h2>{title}</h2></div><span className="review-target">确认后写入：<strong>{target}</strong></span></div>
     {summary?<p className="review-summary">{summary}</p>:null}
     {fields.length?<dl className="review-fields">{fields.map(([key,value])=><div key={key}><dt>{fieldLabels[key]??humanizeKey(key)}</dt><dd>{displayValue(key,value)}</dd></div>)}</dl>:null}
-    <div className="review-meta"><span><Clock3 size={14}/>{formatDate(item.createdAt)}</span><span><FileText size={14}/>{sourceCount} 条聊天证据</span></div>
+    <div className="review-meta"><span><Clock3 size={14}/>{formatDate(item.createdAt)}</span><EvidencePanel candidateId={item.id} count={sourceCount}/></div>
     {reasoning?<details className="review-reasoning"><summary>查看小龙的判断依据 <ChevronDown size={14}/></summary><p>{reasoning}</p></details>:null}
     <footer><button disabled={busy} onClick={()=>onDecision("reject")}><XCircle size={16}/>不准确，驳回</button><button disabled={busy} className="confirm" onClick={()=>onDecision("confirm")}><CheckCircle2 size={16}/>{busy?"正在处理…":`确认并写入${target}`}</button></footer>
   </article>
+}
+
+function EvidencePanel({candidateId,count}:{candidateId:string;count:number}){
+  const[open,setOpen]=useState(false);const[items,setItems]=useState<EvidenceMessage[]>([]);const[loading,setLoading]=useState(false);const[error,setError]=useState("");
+  async function toggle(){if(open){setOpen(false);return}setOpen(true);if(items.length||!count)return;setLoading(true);const r=await fetch(`/api/review/candidates/${candidateId}/evidence`);setLoading(false);if(!r.ok){setError("原始聊天暂时无法加载");return}setItems((await r.json()).items??[])}
+  return <div className="evidence-panel"><button type="button" className="evidence-trigger" disabled={!count} onClick={()=>void toggle()}><FileText size={14}/>{count} 条聊天证据<ChevronDown className={open?"is-open":""} size={14}/></button>{open?<div className="evidence-drawer"><header><div><strong>原始聊天记录</strong><small>直接读取数据库 · 不调用 AI · 不消耗 Token</small></div><span>{count} 条</span></header>{loading?<p className="evidence-loading">正在读取原始聊天…</p>:error?<p className="evidence-error">{error}</p>:<div className="chat-transcript">{items.map(message=><article key={message.id}><div><strong>{message.senderName||"未知发送人"}</strong><time>{formatFullDate(message.sentAt)}</time></div><p>{message.content||`[${messageTypeLabel(message.messageType)}消息暂无文字内容]`}</p><small>{messageTypeLabel(message.messageType)}</small></article>)}{!items.length?<p className="evidence-loading">没有找到可展示的原始聊天</p>:null}</div>}</div>:null}</div>
 }
 
 function iconFor(kind:string){if(kind.includes("progress")||kind==="event"||kind==="digest")return <HardHat size={16}/>;if(kind.includes("todo"))return <ListTodo size={16}/>;if(kind.includes("risk")||kind==="owner_alert")return <ShieldAlert size={16}/>;if(kind.includes("customer"))return <UsersRound size={16}/>;return <FileText size={16}/>}
@@ -45,3 +52,5 @@ function text(value:unknown){return typeof value==="string"?value.trim():""}
 function displayValue(key:string,value:unknown){if(typeof value==="number"&&key.toLowerCase().includes("progress"))return `${value}%`;if(Array.isArray(value))return value.join("、");if(typeof value==="object")return JSON.stringify(value);return String(value)}
 function humanizeKey(key:string){return key.replace(/_/g," ").replace(/([a-z])([A-Z])/g,"$1 $2")}
 function formatDate(value:string){return new Intl.DateTimeFormat("zh-CN",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(value))}
+function formatFullDate(value:string){return new Intl.DateTimeFormat("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date(value))}
+function messageTypeLabel(value:string){return ({text:"文字",voice:"语音转写",image:"图片",video:"视频",file:"文件",link:"链接"} as Record<string,string>)[value]||value||"消息"}
