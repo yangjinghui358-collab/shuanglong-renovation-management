@@ -6,6 +6,7 @@ import { AgentReviewPage } from "../features/review/AgentReviewPage";
 import { UserManagementPage } from "../features/settings/UserManagementPage";
 import { ModuleRecordsPage } from "../features/modules/ModuleRecordsPage";
 import { AgentCenterPage } from "../features/agents/AgentCenterPage";
+import { ProjectManagementPage } from "../features/projects/ProjectManagementPage";
 
 const previews = [
   ["quotations", "设计报价"],
@@ -21,7 +22,7 @@ export const router = createBrowserRouter([
       { path: "ai-review", element: <AgentReviewPage /> },
       { path: "agents", element: <AgentCenterPage /> },
       { path: "settings", element: <UserManagementPage /> },
-      { path: "projects", element: <ModuleRecordsPage module="projects" /> },
+      { path: "projects", element: <ProjectManagementPage /> },
       { path: "materials", element: <ModuleRecordsPage module="procurement" /> },
       { path: "customers", element: <ModuleRecordsPage module="crm" /> },
       { path: "finance", element: <ModuleRecordsPage module="finance" /> },
