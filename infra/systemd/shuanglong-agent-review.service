@@ -12,8 +12,8 @@ WorkingDirectory=/opt/wecom-chat-pipeline
 EnvironmentFile=/etc/wecom-chat-pipeline/secrets.env
 EnvironmentFile=/etc/shuanglong-management/api.env
 Environment=MANAGEMENT_API_BASE_URL=http://127.0.0.1:3001
-Environment=MANAGEMENT_AGENT_REVIEW_SCRIPT=/opt/shuanglong-management/current/apps/agent-worker/dist/chat-review.cjs
+Environment=MANAGEMENT_AGENT_REVIEW_SCRIPT=/opt/shuanglong-agent-worker/current/chat-review.cjs
 Environment=WECOM_PIPELINE_ROOT=/opt/wecom-chat-pipeline
-ExecStart=/usr/bin/node /opt/shuanglong-management/current/apps/agent-worker/dist/agent-dispatcher.cjs
+ExecStart=/usr/bin/node /opt/shuanglong-agent-worker/current/agent-dispatcher.cjs
 NoNewPrivileges=true
 PrivateTmp=true
