@@ -5,6 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+TimeoutStartSec=180
 User=root
 Group=root
 WorkingDirectory=/opt/wecom-chat-pipeline

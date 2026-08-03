@@ -10,6 +10,7 @@ const apiBaseUrl = (process.env.MANAGEMENT_API_BASE_URL || "http://127.0.0.1:300
 const agentToken = required("AGENT_INGEST_TOKEN")
 
 async function main() {
+  await managementPool.query(`UPDATE agent_run_requests SET status='failed',error='Agent 运行中断，已自动收口',finished_at=now() WHERE status='running' AND started_at<now()-interval '5 minutes'`)
   const job = await claimJob()
   if (!job) return console.log(JSON.stringify({ ok: true, status: "idle" }))
   try {
@@ -34,8 +35,12 @@ async function claimJob() {
 
 async function runAgent(key) {
   if (key === "chat_archive") {
-    await runProcess("/usr/bin/node", [required("MANAGEMENT_AGENT_REVIEW_SCRIPT")])
-    return syncChatDrafts()
+    let refresh = "succeeded"
+    try { await runProcess("/usr/bin/node", [required("MANAGEMENT_AGENT_REVIEW_SCRIPT")]) }
+    catch { refresh = "failed_using_existing_drafts" }
+    const result = await syncChatDrafts()
+    if (!result.submitted && refresh !== "succeeded") throw new Error("聊天 AI 刷新失败，且没有可同步的已有草稿")
+    return { ...result, refresh }
   }
   if (key === "todo_reminder") return submitTodoReminders()
   if (key === "owner_alert") return submitOwnerAlerts()

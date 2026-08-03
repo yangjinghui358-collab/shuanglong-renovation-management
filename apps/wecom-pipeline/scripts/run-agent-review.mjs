@@ -46,6 +46,7 @@ digest必须且只能有一条，概括当前项目状态、已完成、进行�
   const response = await fetch(config.aiBaseUrl.replace(/\/$/, '') + '/chat/completions', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${config.aiApiKey}` },
+    signal: AbortSignal.timeout(120_000),
     body: JSON.stringify({
       model: config.aiModel,
       temperature: 0.1,
