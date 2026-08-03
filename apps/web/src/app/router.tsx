@@ -7,6 +7,7 @@ import { UserManagementPage } from "../features/settings/UserManagementPage";
 import { ModuleRecordsPage } from "../features/modules/ModuleRecordsPage";
 import { AgentCenterPage } from "../features/agents/AgentCenterPage";
 import { ProjectManagementPage } from "../features/projects/ProjectManagementPage";
+import { CustomerManagementPage } from "../features/customers/CustomerManagementPage";
 
 const previews = [
   ["quotations", "设计报价"],
@@ -24,7 +25,7 @@ export const router = createBrowserRouter([
       { path: "settings", element: <UserManagementPage /> },
       { path: "projects", element: <ProjectManagementPage /> },
       { path: "materials", element: <ModuleRecordsPage module="procurement" /> },
-      { path: "customers", element: <ModuleRecordsPage module="crm" /> },
+      { path: "customers", element: <CustomerManagementPage /> },
       { path: "finance", element: <ModuleRecordsPage module="finance" /> },
       { path: "inventory", element: <ModuleRecordsPage module="inventory" /> },
       { path: "tasks", element: <ModuleRecordsPage module="tasks" /> },

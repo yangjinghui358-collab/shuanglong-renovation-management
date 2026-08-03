@@ -40,6 +40,7 @@ try {
 允许的module_type只有：event、construction_progress、todo、risk、customer_requirement、material、procurement、financial_record、inventory_record、acceptance、digest。
 所有事实必须有聊天ref证据，只能使用输入中存在的M编号。禁止猜测不存在的金额、日期、负责人和完成状态；推算内容必须在reasoning中明确写“推算”。
 每个实际事项只保留一条；闲聊、测试系统、拉人进群等非施工业务不得生成正式候选。
+customer_requirement用于客户销售板块。仅从聊天明确内容提取：customerName、phone、source、stage（新线索/已联系/量房/出方案/报价/谈单/签约/流失）、houseType、area、address、budget、requirements、tags、owner、nextActionAt、probability、expectedAmount。没有明确依据的字段留空，禁止猜测手机号、地址、预算、金额和成交概率。
 digest必须且只能有一条，概括当前项目状态、已完成、进行中、待确认、风险和下一步。
 只输出JSON对象，格式：
 {"drafts":[{"module_type":"todo","title":"","payload":{"summary":"","owner":"","status":"","event_date":"","due_date":"","phase":"","location":"","progress":0,"risk_level":"","next_action":""},"source_refs":["M001"],"confidence":0.0,"ai_reasoning":""}]}。`
