@@ -20,7 +20,7 @@ describe("AppShell", () => {
 
   it.each([
     ["real", "真实数据"],
-    ["demo", "演示数据"],
+    ["demo", "待录入"],
     ["ai_inferred", "AI 推测"],
     ["pending_confirmation", "待确认"],
     ["confirmed", "已确认"],
