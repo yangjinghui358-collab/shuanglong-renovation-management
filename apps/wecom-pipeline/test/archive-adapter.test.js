@@ -18,7 +18,7 @@ test('企微群文本消息标准化', () => {
       seq: 18,
       group_id: 'wr-room',
       sender_id: 'zhangsan',
-      sender_name: 'zhangsan',
+      sender_name: '',
       sent_at: '2024-07-23T00:30:00.000Z',
       msg_type: 'text',
       content: '请明天下午五点前提交名单'

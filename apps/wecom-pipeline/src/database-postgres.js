@@ -337,6 +337,17 @@ export async function insertMessages(db, messages) {
   }
 }
 
+export async function getSenderNames(db, senderIds) {
+  if (!senderIds.length) return {}
+  const result = await db.query(`SELECT sender_id,max(sender_name) AS sender_name FROM messages
+    WHERE sender_id=ANY($1::text[]) AND sender_name<>'' AND sender_name<>sender_id GROUP BY sender_id`, [senderIds])
+  return Object.fromEntries(result.rows.map(row => [row.sender_id, row.sender_name]))
+}
+
+export async function updateSenderName(db, senderId, senderName) {
+  await db.query(`UPDATE messages SET sender_name=$2 WHERE sender_id=$1 AND (sender_name='' OR sender_name=sender_id)`, [senderId, senderName])
+}
+
 export async function listMessages(db, groupId, start, end) {
   const result = await db.query(`SELECT msg_id,seq,group_id,sender_id,sender_name,sent_at,msg_type,content
     FROM messages WHERE group_id=$1 AND sent_at >= $2 AND sent_at < $3 ORDER BY sent_at,seq`, [groupId, new Date(start), new Date(end)])

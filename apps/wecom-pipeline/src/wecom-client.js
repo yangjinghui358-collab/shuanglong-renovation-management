@@ -32,6 +32,23 @@ export class WeComClient {
     }
   }
 
+  async getSenderName(senderId) {
+    if (!senderId) return ''
+    const accessToken = await this.getAccessToken()
+    if (/^w[mo]/.test(senderId)) {
+      const url = new URL(`${API_BASE}/externalcontact/get`)
+      url.searchParams.set('access_token', accessToken)
+      url.searchParams.set('external_userid', senderId)
+      const body = await this.request(url)
+      return String(body.external_contact?.name || '').trim()
+    }
+    const url = new URL(`${API_BASE}/user/get`)
+    url.searchParams.set('access_token', accessToken)
+    url.searchParams.set('userid', senderId)
+    const body = await this.request(url)
+    return String(body.name || '').trim()
+  }
+
   async getAccessToken() {
     if (this.token && Date.now() < this.tokenExpiresAt) return this.token
     const url = new URL(`${API_BASE}/gettoken`)

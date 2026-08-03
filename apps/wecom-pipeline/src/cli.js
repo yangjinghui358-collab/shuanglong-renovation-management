@@ -9,6 +9,7 @@ import { WeComClient } from './wecom-client.js'
 import { startWeComCallback } from './wecom-callback.js'
 import { PushPlusClient } from './pushplus-client.js'
 import { getAgentStatus, testAiConnection } from './domain-agent.js'
+import { SenderNameResolver } from './sender-name-resolver.js'
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const config = loadConfig(rootDir)
@@ -21,6 +22,10 @@ const provider = createArchiveProvider(config)
 const wecomClient = config.wecomGroupSendEnabled
   ? new WeComClient({ corpId: config.wecomCorpId, secret: config.wecomAppSecret })
   : null
+const contactClient = config.wecomContactSyncEnabled
+  ? new WeComClient({ corpId: config.wecomCorpId, secret: config.wecomContactSecret })
+  : null
+const senderNameResolver = contactClient ? new SenderNameResolver({ client: contactClient, store }) : null
 const pushPlusClient = config.pushplusEnabled
   ? new PushPlusClient({ token: config.pushplusToken })
   : null
@@ -29,7 +34,7 @@ try {
   if (command === 'init') {
     console.log(JSON.stringify({ ok: true, database: config.databasePath }, null, 2))
   } else if (command === 'run-once') {
-    const collection = await collectMessages(db, provider, store)
+    const collection = await collectMessages(db, provider, store, senderNameResolver)
     const window = fixtureAwareWindow()
     const digest = await buildDigest(db, config, window.digestDate, window.start, window.end, store)
     console.log(JSON.stringify({ collection, ...digest }, null, 2))
@@ -44,7 +49,7 @@ try {
   } else if (command === 'ai-test') {
     if (!config.aiBaseUrl || !config.aiApiKey || !config.aiModel) throw new Error('请先配置 AI_BASE_URL、AI_API_KEY 和 AI_MODEL')
     if (!pushPlusClient) throw new Error('请先启用 PushPlus')
-    await collectMessages(db, provider, store)
+    await collectMessages(db, provider, store, senderNameResolver)
     const window = dailyWindow(new Date(), config)
     const result = await buildDigest(db, config, window.digestDate, window.start, window.end, store)
     const sent = await pushPlusClient.sendDigest(result.digest)
@@ -85,7 +90,7 @@ async function runDaemon() {
         // Record the attempt before calling the archive API so transient failures do not
         // turn a five-hour polling policy into one request per minute.
         lastCollectionAttemptAt = nowMs
-        const collection = await collectMessages(db, provider, store)
+        const collection = await collectMessages(db, provider, store, senderNameResolver)
         if (collection.inserted) console.log(`[collect] 新增 ${collection.inserted} 条消息，seq=${collection.lastSeq}`)
       }
       if (digestDue) {

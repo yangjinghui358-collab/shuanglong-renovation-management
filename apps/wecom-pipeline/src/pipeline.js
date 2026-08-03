@@ -1,10 +1,11 @@
 import { analyzeMessages } from './analyzer.js'
 import { formatDigestForGroup } from './wecom-client.js'
 
-export async function collectMessages(db, provider, store) {
+export async function collectMessages(db, provider, store, senderNameResolver = null) {
   const lastSeq = Number(await store.getState(db, 'archive_seq', '0'))
-  const messages = await provider.fetchAfter(lastSeq)
+  let messages = await provider.fetchAfter(lastSeq)
   validateMessages(messages)
+  if (senderNameResolver) messages = await senderNameResolver.enrich(db, messages)
   const inserted = await store.insertMessages(db, messages)
   const maxSeq = messages.reduce((max, item) => Math.max(max, Number(item.seq)), lastSeq)
   if (maxSeq > lastSeq) await store.setState(db, 'archive_seq', maxSeq)
