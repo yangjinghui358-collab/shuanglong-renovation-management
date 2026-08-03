@@ -1,0 +1,11 @@
+[Unit]
+Description=Extract WeCom chat facts every fifteen minutes
+
+[Timer]
+OnCalendar=*:0/15
+Persistent=true
+RandomizedDelaySec=30
+Unit=shuanglong-agent-review.service
+
+[Install]
+WantedBy=timers.target

@@ -12,6 +12,12 @@ async function owner(request: FastifyRequest, reply: FastifyReply, store: Manage
   if (user.role !== "owner") { reply.code(403).send({ error: "权限不足" }); return null; }
   return user;
 }
+async function moduleUser(request: FastifyRequest, reply: FastifyReply, store: ManagementStore, module: CandidateModule) {
+  const user = await authenticate(request, store);
+  if (!user) { reply.code(401).send({ error: "未登录" }); return null; }
+  if (user.role === "employee" && module !== "projects") { reply.code(403).send({ error: "权限不足" }); return null; }
+  return user;
+}
 export function registerReviewRoutes(app: FastifyInstance, store: ManagementStore, agentToken: string): void {
   app.post("/api/agent/candidates", async (request, reply) => {
     const bearer = request.headers.authorization?.replace(/^Bearer\s+/i, "") ?? "";
@@ -34,9 +40,9 @@ export function registerReviewRoutes(app: FastifyInstance, store: ManagementStor
     return store.rejectCandidate((request.params as {id:string}).id, b.version!, user.id, b.reason.trim());
   });
   app.get("/api/modules/:module/records", async (request, reply) => {
-    if (!(await owner(request, reply, store))) return;
     const module = (request.params as {module:CandidateModule}).module;
     if (!["projects","procurement","crm"].includes(module)) return reply.code(404).send({ error: "模块不存在" });
+    if (!(await moduleUser(request, reply, store, module))) return;
     return { items: await store.listModuleRecords(module) };
   });
 }
