@@ -1,0 +1,24 @@
+:root {
+  --sl-bg: #0f151c;
+  --sl-panel: #19232d;
+  --sl-panel-raised: #202c37;
+  --sl-panel-soft: #151e27;
+  --sl-border: #2c3944;
+  --sl-border-soft: rgba(255, 255, 255, 0.07);
+  --sl-text: #eef3f7;
+  --sl-muted: #94a1ad;
+  --sl-muted-2: #697682;
+  --sl-gold: #c9a45e;
+  --sl-gold-bright: #e2c27c;
+  --sl-gold-soft: rgba(201, 164, 94, 0.12);
+  --sl-success: #5fc99a;
+  --sl-warning: #e2ae55;
+  --sl-danger: #ef737b;
+  --sl-info: #69a7dd;
+  --sl-radius: 14px;
+  --sl-radius-sm: 9px;
+  --sl-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
+  color: var(--sl-text);
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-synthesis: none;
+}
