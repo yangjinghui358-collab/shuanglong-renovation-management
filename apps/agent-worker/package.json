@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "review": "node src/review.mjs",
+    "sync-candidates": "node src/sync-review-candidates.mjs",
     "voice": "node src/voice.mjs",
     "construction": "node src/construction.mjs",
     "smartsheet": "node src/smartsheet.mjs",
-    "build": "node --check src/review.mjs && node --check src/voice.mjs && node --check src/construction.mjs && node --check src/smartsheet.mjs",
-    "typecheck": "node --check src/review.mjs && node --check src/voice.mjs && node --check src/construction.mjs && node --check src/smartsheet.mjs"
+    "build": "node --check src/review.mjs && node --check src/voice.mjs && node --check src/construction.mjs && node --check src/smartsheet.mjs && node --check src/sync-review-candidates.mjs && node --check src/candidate-mapping.mjs",
+    "typecheck": "node --check src/review.mjs && node --check src/voice.mjs && node --check src/construction.mjs && node --check src/smartsheet.mjs && node --check src/sync-review-candidates.mjs && node --check src/candidate-mapping.mjs"
   }
 }

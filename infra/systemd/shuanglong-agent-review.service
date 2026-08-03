@@ -1,0 +1,18 @@
+[Unit]
+Description=Extract WeCom chat facts and submit management candidates
+After=network-online.target postgresql.service shuanglong-management-api.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/opt/wecom-chat-pipeline
+EnvironmentFile=/etc/wecom-chat-pipeline/secrets.env
+EnvironmentFile=/etc/shuanglong-management/api.env
+Environment=MANAGEMENT_API_BASE_URL=http://127.0.0.1:3001
+ExecStart=/usr/bin/node /opt/wecom-chat-pipeline/scripts/run-agent-review.mjs
+ExecStart=/usr/bin/node /opt/shuanglong-management/current/apps/agent-worker/src/sync-review-candidates.mjs
+NoNewPrivileges=true
+PrivateTmp=true
+

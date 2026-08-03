@@ -4,5 +4,6 @@ export default defineWorkspace([
   "packages/contracts",
   "packages/data-access",
   "apps/api",
+  "apps/agent-worker",
   "apps/web",
 ]);
