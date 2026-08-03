@@ -31,8 +31,11 @@ const navItems: Array<{ label: string; path: string; icon: LucideIcon; badge?: s
   { label: "AI 待确认", path: "/ai-review", icon: ClipboardCheck, badge: "6" },
   { label: "系统设置", path: "/settings", icon: Settings },
 ];
+const rolePaths={owner:null,management:new Set(["/","/projects","/materials","/customers","/schedule"]),employee:new Set(["/","/projects","/schedule"])} as const;
+const roleLabels={owner:"老板账号",management:"管理层账号",employee:"员工账号"} as const;
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children,role="owner" }: { children: ReactNode;role?:keyof typeof rolePaths }) {
+  const visibleItems=rolePaths[role]?navItems.filter(item=>rolePaths[role]!.has(item.path)):navItems;
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -44,7 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
         <nav aria-label="主导航" className="main-nav">
-          {navItems.map(({ label, path, icon: Icon, ...item }) => (
+          {visibleItems.map(({ label, path, icon: Icon, ...item }) => (
             <NavLink key={path} to={path} end={path === "/"} className={({ isActive }) => `nav-item${isActive ? " is-active" : ""}`}>
               <Icon size={18} strokeWidth={1.8} aria-hidden="true" />
               <span>{label}</span>
@@ -68,7 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="secure-state"><BadgeCheck size={16} aria-hidden="true" />只读预览</span>
           <button className="owner-profile" type="button" aria-label="打开老板账户菜单">
             <span className="owner-avatar">龙</span>
-            <span><strong>老板账号</strong><small>经营总览</small></span>
+            <span><strong>{roleLabels[role]}</strong><small>{role==="owner"?"经营总览":"岗位视图"}</small></span>
           </button>
         </header>
         <main className="main-content">{children}</main>

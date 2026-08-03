@@ -7,6 +7,8 @@ import type { AgentCandidate,AuthUser,CandidateModule,ManagementStore } from "..
 class MemoryStore implements ManagementStore{
   user!:AuthUser&{passwordHash:string}; sessions=new Map<string,AuthUser>(); candidates:AgentCandidate[]=[];records:any[]=[];
   async initialize(){} async bootstrapOwner(){} async findUserByPhone(p:string){return p===this.user.phone?this.user:null} async createSession(_:string,h:string){this.sessions.set(h,this.user)} async findSession(h:string){return this.sessions.get(h)??null} async deleteSession(h:string){this.sessions.delete(h)}
+  async createUser(phone:string,passwordHash:string,role:"management"|"employee"){return{id:randomUUID(),phone,role,mustChangePassword:true}}
+  async listUsers(){return[this.user]}
   async changePassword(_id:string,passwordHash:string){this.user.passwordHash=passwordHash;this.user.mustChangePassword=false}
   async createCandidate(input:any){const c={...input,id:randomUUID(),status:"pending_review",version:1,createdAt:new Date().toISOString()} as AgentCandidate;this.candidates.push(c);return c} async listCandidates(){return this.candidates.filter(x=>x.status==="pending_review")}
   async confirmCandidate(id:string,v:number,_k:string,_a:string,p?:Record<string,unknown>){const c=this.candidates.find(x=>x.id===id&&x.version===v)!;c.status="projected";c.version++;this.records.push({candidate_id:id,payload:p??c.payload});return c} async rejectCandidate(id:string){return this.candidates.find(x=>x.id===id)!} async listModuleRecords(_m:CandidateModule){return this.records}
