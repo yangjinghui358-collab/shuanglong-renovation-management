@@ -1,0 +1,4 @@
+import { useState } from "react";
+import { useAuth } from "./AuthProvider";
+import "./auth.css";
+export function LoginPage(){const{login}=useAuth();const[phone,setPhone]=useState("");const[password,setPassword]=useState("");const[error,setError]=useState("");return <main className="login-page"><form className="login-card" onSubmit={async e=>{e.preventDefault();setError("");try{await login(phone,password)}catch{setError("手机号或密码错误")}}}><span>双龙装饰</span><h1>AI 经营管理中心</h1><label>老板手机号<input autoComplete="username" inputMode="numeric" value={phone} onChange={e=>setPhone(e.target.value)} /></label><label>密码<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} /></label>{error&&<p role="alert">{error}</p>}<button type="submit">安全登录</button></form></main>}

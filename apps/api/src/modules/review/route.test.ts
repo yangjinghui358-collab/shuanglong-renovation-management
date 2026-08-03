@@ -1,0 +1,15 @@
+import { randomUUID } from "node:crypto";
+import { describe,expect,it } from "vitest";
+import { buildApp } from "../../app";
+import { hashPassword } from "../auth/password";
+import type { AgentCandidate,AuthUser,CandidateModule,ManagementStore } from "../management/types";
+
+class MemoryStore implements ManagementStore{
+  user!:AuthUser&{passwordHash:string}; sessions=new Map<string,AuthUser>(); candidates:AgentCandidate[]=[];records:any[]=[];
+  async initialize(){} async bootstrapOwner(){} async findUserByPhone(p:string){return p===this.user.phone?this.user:null} async createSession(_:string,h:string){this.sessions.set(h,this.user)} async findSession(h:string){return this.sessions.get(h)??null} async deleteSession(h:string){this.sessions.delete(h)}
+  async changePassword(_id:string,passwordHash:string){this.user.passwordHash=passwordHash;this.user.mustChangePassword=false}
+  async createCandidate(input:any){const c={...input,id:randomUUID(),status:"pending_review",version:1,createdAt:new Date().toISOString()} as AgentCandidate;this.candidates.push(c);return c} async listCandidates(){return this.candidates.filter(x=>x.status==="pending_review")}
+  async confirmCandidate(id:string,v:number,_k:string,_a:string,p?:Record<string,unknown>){const c=this.candidates.find(x=>x.id===id&&x.version===v)!;c.status="projected";c.version++;this.records.push({candidate_id:id,payload:p??c.payload});return c} async rejectCandidate(id:string){return this.candidates.find(x=>x.id===id)!} async listModuleRecords(_m:CandidateModule){return this.records}
+}
+const reader={read:async()=>({sourceFreshness:{lastMessageAt:null,status:"demo" as const,statusLabel:"演示数据" as const},digest:null,metrics:[],projects:[],materials:[],leads:[],approvals:[]})};
+describe("authenticated agent projection",()=>{it("requires owner confirmation before module write",async()=>{const store=new MemoryStore();store.user={id:randomUUID(),phone:"18600000000",role:"owner",mustChangePassword:true,passwordHash:await hashPassword("temporary-password-123")};const app=buildApp({realReader:reader,demoReader:reader,now:()=>new Date(),managementStore:store,agentIngestToken:"agent-token-at-least-24-characters"});const created=await app.inject({method:"POST",url:"/api/agent/candidates",headers:{authorization:"Bearer agent-token-at-least-24-characters"},payload:{module:"projects",kind:"progress",payload:{projectName:"测试工地",progress:60},confidence:.9,sourceKey:"sample-1"}});expect(created.statusCode).toBe(201);expect(store.records).toHaveLength(0);const login=await app.inject({method:"POST",url:"/api/auth/login",payload:{phone:"18600000000",password:"temporary-password-123"}});const rawCookie=login.headers["set-cookie"]!;const cookie=(Array.isArray(rawCookie)?rawCookie[0]!:rawCookie).split(";")[0];const item=created.json();const confirmed=await app.inject({method:"POST",url:`/api/review/candidates/${item.id}/confirm`,headers:{cookie},payload:{version:1,idempotencyKey:randomUUID()}});expect(confirmed.statusCode).toBe(200);expect(store.records).toHaveLength(1);});});
