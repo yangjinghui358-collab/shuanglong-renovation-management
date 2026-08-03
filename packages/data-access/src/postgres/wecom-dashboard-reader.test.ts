@@ -14,7 +14,7 @@ describe("createWecomDashboardReader", () => {
   it("keeps source freshness real while marking derived project facts as pending", async () => {
     const query = vi.fn(async (input: unknown) => {
       const sql = sqlOf(input).replaceAll(/\s+/g, " ").trim().toUpperCase();
-      if (sql.startsWith("SELECT MAX(MSGTIME)")) {
+      if (sql.startsWith("SELECT MAX(SENT_AT)")) {
         return { rows: [{ last_message_at: "2026-08-02T22:40:00+08:00" }] };
       }
       if (sql.includes("FROM GROUP_PROJECTS")) {

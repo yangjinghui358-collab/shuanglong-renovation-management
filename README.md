@@ -34,3 +34,14 @@ pnpm test:e2e
 ```
 
 部署和服务重启必须经过明确授权；提交到本仓库不代表自动部署生产服务器。
+
+## 登录与 Agent 写入
+
+管理 API 使用独立的 `MANAGEMENT_DATABASE_URL` 保存用户、会话、Agent 候选、老板决策、模块记录和审计信息。`WECOM_DATABASE_URL` 继续只读现有企微数据。首次启动前设置：
+
+- `ADMIN_PHONE`：老板初始化手机号，不提交真实号码。
+- `ADMIN_INITIAL_PASSWORD`：至少 12 位的临时随机密码。
+- `AGENT_INGEST_TOKEN`：至少 24 位的 Agent 专用随机 Token。
+- `MANAGEMENT_DATABASE_URL`：仅对 `management` Schema 有写权限的连接。
+
+Agent 只能调用 `/api/agent/candidates` 创建候选。老板登录后必须在 `/ai-review` 逐条确认，系统才会以幂等事务写入 `projects`、`procurement` 或 `crm` 模块记录，并保留审核与审计记录。
