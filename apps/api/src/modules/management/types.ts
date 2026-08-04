@@ -19,8 +19,10 @@ export interface ManagementStore {
   deleteSession(tokenHash: string): Promise<void>;
   changePassword(userId: string, passwordHash: string): Promise<void>;
   createCandidate(input: Omit<AgentCandidate, "id" | "status" | "version" | "createdAt">, sourceKey: string): Promise<AgentCandidate>;
+  createReviewCandidates(inputs: Array<Omit<AgentCandidate, "id" | "status" | "version" | "createdAt">>, actorId: string, source: "manual" | "spreadsheet"): Promise<AgentCandidate[]>;
   listCandidates(): Promise<AgentCandidate[]>;
   findCandidate(id: string): Promise<AgentCandidate | null>;
+  updateCandidate(id: string, version: number, input: Pick<AgentCandidate, "module" | "kind" | "payload">, actorId: string): Promise<AgentCandidate>;
   confirmCandidate(id: string, version: number, idempotencyKey: string, actorId: string, payload?: Record<string, unknown>): Promise<AgentCandidate>;
   rejectCandidate(id: string, version: number, actorId: string, reason: string): Promise<AgentCandidate>;
   listModuleRecords(module: CandidateModule): Promise<Array<Record<string, unknown>>>;

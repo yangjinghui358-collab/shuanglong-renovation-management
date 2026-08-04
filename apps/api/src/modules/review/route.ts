@@ -5,6 +5,8 @@ import type { AgentKey, CandidateModule, ManagementStore } from "../management/t
 
 const candidateModules: CandidateModule[] = ["projects","procurement","crm","finance","inventory","tasks","alerts"];
 const agentKeys: AgentKey[] = ["chat_archive","todo_reminder","owner_alert"];
+function validPayload(value:unknown):value is Record<string,unknown>{return Boolean(value)&&typeof value==="object"&&!Array.isArray(value)&&JSON.stringify(value).length<=100_000}
+function validKind(value:unknown):value is string{return typeof value==="string"&&value.trim().length>0&&value.trim().length<=80}
 export interface CandidateEvidenceReader { readMessages(ids:string[]):Promise<Array<{id:string;senderId:string;senderName:string;sentAt:string;messageType:string;content:string}>> }
 
 function safeToken(actual: string, expected: string): boolean {
@@ -32,6 +34,8 @@ export function registerReviewRoutes(app: FastifyInstance, store: ManagementStor
     return reply.code(201).send(await store.createCandidate({ module: b.module, kind: b.kind, payload: b.payload, confidence: Math.max(0, Math.min(1, Number(b.confidence ?? 0))) }, b.sourceKey));
   });
   app.get("/api/review/candidates", async (request, reply) => { if (!(await owner(request, reply, store))) return; return { items: await store.listCandidates() }; });
+  app.post("/api/review/candidates",async(request,reply)=>{const user=await owner(request,reply,store);if(!user)return;const b=request.body as{source?:"manual"|"spreadsheet";items?:Array<{module?:CandidateModule;kind?:string;payload?:Record<string,unknown>}>};if(!["manual","spreadsheet"].includes(b.source??"")||!Array.isArray(b.items)||b.items.length<1||b.items.length>200)return reply.code(400).send({error:"每次可录入 1 至 200 条待确认事项"});if(b.items.some(item=>!item.module||!candidateModules.includes(item.module)||!validKind(item.kind)||!validPayload(item.payload)))return reply.code(400).send({error:"归类、事件类型或录入内容不完整"});const source=b.source!;const inputs=b.items.map(item=>({module:item.module!,kind:item.kind!.trim(),payload:{...item.payload,entrySource:source==="manual"?"人工录入":"表格导入"},confidence:1}));return reply.code(201).send({items:await store.createReviewCandidates(inputs,user.id,source)});});
+  app.patch("/api/review/candidates/:id",async(request,reply)=>{const user=await owner(request,reply,store);if(!user)return;const b=request.body as{version?:number;module?:CandidateModule;kind?:string;payload?:Record<string,unknown>};if(!Number.isInteger(b.version)||!b.module||!candidateModules.includes(b.module)||!validKind(b.kind)||!validPayload(b.payload))return reply.code(400).send({error:"修改内容不完整"});return store.updateCandidate((request.params as{id:string}).id,b.version!,{module:b.module,kind:b.kind.trim(),payload:b.payload},user.id);});
   app.get("/api/review/candidates/:id/evidence",async(request,reply)=>{
     if(!(await owner(request,reply,store)))return;
     if(!evidenceReader)return reply.code(503).send({error:"聊天证据服务暂不可用"});
