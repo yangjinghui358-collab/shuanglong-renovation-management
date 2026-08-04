@@ -33,6 +33,7 @@ export class PostgresManagementStore implements ManagementStore {
     CREATE TABLE IF NOT EXISTS agent_run_requests (id uuid PRIMARY KEY, agent_key text NOT NULL CHECK(agent_key IN ('chat_archive','todo_reminder','owner_alert')), requested_by uuid NOT NULL REFERENCES management_users(id), status text NOT NULL DEFAULT 'queued' CHECK(status IN ('queued','running','succeeded','failed')), result jsonb NOT NULL DEFAULT '{}'::jsonb, error text NOT NULL DEFAULT '', requested_at timestamptz NOT NULL DEFAULT now(), started_at timestamptz, finished_at timestamptz);
     CREATE TABLE IF NOT EXISTS sender_aliases (sender_id text PRIMARY KEY,display_name text NOT NULL,updated_by uuid NOT NULL REFERENCES management_users(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE IF NOT EXISTS module_entity_overrides (target_module text NOT NULL,entity_key text NOT NULL,payload jsonb NOT NULL,updated_by uuid NOT NULL REFERENCES management_users(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(target_module,entity_key));
+    CREATE TABLE IF NOT EXISTS interface_text_settings (text_key text PRIMARY KEY, text_value text NOT NULL, updated_by uuid NOT NULL REFERENCES management_users(id), updated_at timestamptz NOT NULL DEFAULT now());
     CREATE INDEX IF NOT EXISTS idx_agent_candidates_status_created ON agent_candidates(status, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_agent_run_requests_status_time ON agent_run_requests(status, requested_at DESC);
     ALTER TABLE agent_candidates DROP CONSTRAINT IF EXISTS agent_candidates_target_module_check;
@@ -375,6 +376,30 @@ export class PostgresManagementStore implements ManagementStore {
       [randomUUID(), actorId, senderId, { displayName }],
     );
     return { senderId, displayName };
+  }
+  async listTextSettings() {
+    const result = await this.pool.query(
+      `SELECT text_key,text_value FROM interface_text_settings ORDER BY text_key`,
+    );
+    return Object.fromEntries(
+      result.rows.map((row) => [row.text_key, row.text_value]),
+    );
+  }
+  async replaceTextSettings(values: Record<string, string>, actorId: string) {
+    return this.transaction(async (client) => {
+      await client.query(`DELETE FROM interface_text_settings`);
+      for (const [key, value] of Object.entries(values)) {
+        await client.query(
+          `INSERT INTO interface_text_settings(text_key,text_value,updated_by) VALUES($1,$2,$3)`,
+          [key, value, actorId],
+        );
+      }
+      await client.query(
+        `INSERT INTO audit_entries(id,actor_id,action,object_type,object_id,details) VALUES($1,$2,'interface_text.replaced','interface_text','global',$3)`,
+        [randomUUID(), actorId, { count: Object.keys(values).length }],
+      );
+      return values;
+    });
   }
   private async transaction<T>(fn: (c: PoolClient) => Promise<T>): Promise<T> {
     const c = await this.pool.connect();

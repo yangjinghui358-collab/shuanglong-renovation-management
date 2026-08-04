@@ -107,4 +107,9 @@ export interface ManagementStore {
     displayName: string,
     actorId: string,
   ): Promise<{ senderId: string; displayName: string }>;
+  listTextSettings?(): Promise<Record<string, string>>;
+  replaceTextSettings?(
+    values: Record<string, string>,
+    actorId: string,
+  ): Promise<Record<string, string>>;
 }
