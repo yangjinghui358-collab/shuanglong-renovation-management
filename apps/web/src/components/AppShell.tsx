@@ -17,9 +17,14 @@ import {
   Bot,
   BellRing,
   UsersRound,
+  Save,
+  PencilLine,
+  X,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { MobileTabBar } from "./MobileTabBar";
+import "../styles/page-edit.css";
+import { useInterfaceTexts } from "../features/settings/InterfaceTextProvider";
 
 const navItems: Array<{ label: string; path: string; icon: LucideIcon; badge?: string }> = [
   { label: "老板首页", path: "/", icon: LayoutDashboard },
@@ -40,6 +45,8 @@ const rolePaths={owner:null,management:new Set(["/","/projects","/materials","/c
 const roleLabels={owner:"老板账号",management:"管理层账号",employee:"员工账号"} as const;
 
 export function AppShell({ children,role="owner" }: { children: ReactNode;role?:keyof typeof rolePaths }) {
+  const {editing,saving,startPageEdit,cancelPageEdit,savePageEdit}=useInterfaceTexts();
+  const[editError,setEditError]=useState("");
   const[pendingCount,setPendingCount]=useState(0);
   useEffect(()=>{if(role!=="owner")return;const load=()=>fetch("/api/review/candidates").then(r=>r.ok?r.json():null).then(body=>{if(body)setPendingCount(body.items?.length??0)}).catch(()=>undefined);void load();const listener=(event:Event)=>setPendingCount(Number((event as CustomEvent).detail)||0);window.addEventListener("review-count-changed",listener);const timer=setInterval(()=>void load(),30000);return()=>{window.removeEventListener("review-count-changed",listener);clearInterval(timer)}},[role]);
   const visibleItems=rolePaths[role]?navItems.filter(item=>rolePaths[role]!.has(item.path)):navItems;
@@ -75,6 +82,7 @@ export function AppShell({ children,role="owner" }: { children: ReactNode;role?:
             <strong>双龙装饰 · AI 经营管理中心</strong>
           </div>
           <div className="topbar-spacer" />
+          {role==="owner"?<div className="page-edit-actions" data-no-page-edit>{editing?<><button type="button" onClick={cancelPageEdit}><X size={15}/>取消</button><button type="button" className="is-primary" disabled={saving} onClick={()=>{setEditError("");void savePageEdit().catch(error=>setEditError(error instanceof Error?error.message:"保存失败"))}}><Save size={15}/>{saving?"保存中…":"保存页面"}</button></>:<button type="button" onClick={startPageEdit}><PencilLine size={15}/>编辑页面</button>}{editError?<span role="alert">{editError}</span>:null}</div>:null}
           <span className="secure-state"><BadgeCheck size={16} aria-hidden="true" />权限保护</span>
           <button className="owner-profile" type="button" aria-label="打开老板账户菜单">
             <span className="owner-avatar">龙</span>
