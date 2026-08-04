@@ -33,4 +33,16 @@ describe("AgentReviewPage",()=>{
     expect(await screen.findByText("张师傅")).toBeVisible();
     expect(screen.queryByText("external-2")).not.toBeInTheDocument();
   });
+  it("creates a manual item in pending review instead of a formal module",async()=>{
+    let created=false;
+    server.use(http.get("/api/review/candidates",()=>HttpResponse.json({items:created?[{id:"manual-1",module:"projects",kind:"event",confidence:1,status:"pending_review",version:1,createdAt:"2026-08-04T00:00:00Z",payload:{title:"防水验收",summary:"闭水试验完成",entrySource:"人工录入"}}]:[]})));
+    server.use(http.post("/api/review/candidates",async({request})=>{const body=await request.json() as{source:string;items:Array<{payload:{title:string}}>};expect(body.source).toBe("manual");expect(body.items[0].payload.title).toBe("防水验收");created=true;return HttpResponse.json({items:[]},{status:201})}));
+    render(<AgentReviewPage/>);
+    fireEvent.click(await screen.findByRole("button",{name:"自定义录入"}));
+    fireEvent.change(screen.getByPlaceholderText("例如：景辉房子防水验收"),{target:{value:"防水验收"}});
+    fireEvent.change(screen.getByPlaceholderText("填写发生了什么、负责人、日期和下一步"),{target:{value:"闭水试验完成"}});
+    fireEvent.click(screen.getByRole("button",{name:"加入待确认"}));
+    expect(await screen.findByRole("heading",{name:"防水验收"})).toBeVisible();
+    expect(screen.getByText("人工录入")).toBeVisible();
+  });
 });
