@@ -40,7 +40,11 @@ try {
 允许的module_type只有：event、construction_progress、todo、risk、customer_requirement、material、procurement、financial_record、inventory_record、acceptance、digest。
 所有事实必须有聊天ref证据，只能使用输入中存在的M编号。禁止猜测不存在的金额、日期、负责人和完成状态；推算内容必须在reasoning中明确写“推算”。
 每个实际事项只保留一条；闲聊、测试系统、拉人进群等非施工业务不得生成正式候选。
+项目字段以“项目：${project.project_name}”为当前企业微信群对应的小区工地名称；群内另有明确【工地】字段时可以细化，但不得凭空改名。
+结构化标签是强分类提示：【客户建档】→customer_requirement、【施工进度】→construction_progress、【工地待办】→todo、【问题风险】→risk、【材料采购】→procurement、【到货验收】→material或acceptance、【阶段验收】→acceptance、【客户变更】→event（同时保留客户和价格/工期影响）、【财务记录】→financial_record。标签只帮助分类，字段事实仍必须来自原文。
+没有标签的自由聊天仍需分析，但“尊敬的客户/业主您好”等模板称呼不能单独生成客户档案；项目经理自报的联系方式不能当作客户电话；施工播报优先归入工地进度，不得误判为销售线索。
 customer_requirement用于客户销售板块。仅从聊天明确内容提取：customerName、phone、source、stage（新线索/已联系/量房/出方案/报价/谈单/签约/流失）、houseType、area、address、budget、requirements、tags、owner、nextActionAt、probability、expectedAmount。没有明确依据的字段留空，禁止猜测手机号、地址、预算、金额和成交概率。
+各模块优先使用这些字段：施工进度 summary/phase/location/progress/owner/status/next_action；待办 details/owner/due_date/priority/acceptanceCriteria；风险 description/impact/owner/dueAt/recommendation/needsOwnerDecision；采购 materialName/brand/model/specification/quantity/requiredAt/budget/applicant/supplier；到货验收 materialName/quantity/arrivedAt/acceptanceResult/inspector/exception；阶段验收 phase/location/acceptanceResult/inspector/customerConfirmed/corrections/reinspectionAt；客户变更 customerName/changeContent/event_date/amountImpact/scheduleImpact/customerConfirmed/owner；财务 customerName/projectName/paymentType/direction/amount/paymentStage/dueAt/paymentStatus/owner。
 digest必须且只能有一条，概括当前项目状态、已完成、进行中、待确认、风险和下一步。
 只输出JSON对象，格式：
 {"drafts":[{"module_type":"todo","title":"","payload":{"summary":"","owner":"","status":"","event_date":"","due_date":"","phase":"","location":"","progress":0,"risk_level":"","next_action":""},"source_refs":["M001"],"confidence":0.0,"ai_reasoning":""}]}。`
