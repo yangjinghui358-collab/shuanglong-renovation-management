@@ -1,54 +1,889 @@
 import type { OwnerDashboard } from "@shuanglong/contracts";
 import type { CSSProperties } from "react";
-import { AlertTriangle, ArrowLeft, Bot, CalendarClock, ChevronRight, CircleDollarSign, Clock3, Home, MapPin, MessageSquareText, Search, Target, UserRound, UsersRound } from "lucide-react";
-import { useEffect,useMemo,useState } from "react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Bot,
+  CalendarClock,
+  Check,
+  ChevronRight,
+  CircleDollarSign,
+  Clock3,
+  Home,
+  MessageSquareText,
+  Pencil,
+  Search,
+  Target,
+  UserRound,
+  UsersRound,
+  X,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useOwnerDashboard } from "../dashboard/useOwnerDashboard";
 import "./customer-management.css";
 
-type Lead=OwnerDashboard["leads"][number];
-type ModuleRecord={id:string;candidate_id:string;kind:string;payload:Record<string,unknown>;created_at:string};
-type Customer={id:string;name:string;stage:string;probability:number;expectedAmount:number;nextActionAt:string|null;ownerName:string;source:string;phone:string;address:string;houseType:string;area:string;budget:string;requirements:string;tags:string[];lastContactAt:string|null;records:ModuleRecord[]};
-const salesStages=["新线索","已联系","量房","出方案","报价","谈单","签约"] as const;
-const allStages=[...salesStages,"流失"];
-const probabilityByStage:Record<string,number>={新线索:10,已联系:20,量房:35,出方案:50,报价:65,谈单:80,签约:100,流失:0};
+type Lead = OwnerDashboard["leads"][number];
+type ModuleRecord = {
+  id: string;
+  candidate_id: string;
+  kind: string;
+  payload: Record<string, unknown>;
+  created_at: string;
+};
+type Customer = {
+  id: string;
+  name: string;
+  stage: string;
+  probability: number;
+  expectedAmount: number;
+  nextActionAt: string | null;
+  ownerName: string;
+  source: string;
+  phone: string;
+  address: string;
+  houseType: string;
+  area: string;
+  budget: string;
+  requirements: string;
+  tags: string[];
+  lastContactAt: string | null;
+  records: ModuleRecord[];
+};
+const salesStages = [
+  "新线索",
+  "已联系",
+  "量房",
+  "出方案",
+  "报价",
+  "谈单",
+  "签约",
+] as const;
+const allStages = [...salesStages, "流失"];
+const probabilityByStage: Record<string, number> = {
+  新线索: 10,
+  已联系: 20,
+  量房: 35,
+  出方案: 50,
+  报价: 65,
+  谈单: 80,
+  签约: 100,
+  流失: 0,
+};
 
-export function CustomerManagementPage(){
-  const{user}=useAuth();const{data,error,isPending,refetch}=useOwnerDashboard();const[records,setRecords]=useState<ModuleRecord[]>([]);const[recordError,setRecordError]=useState("");const[keyword,setKeyword]=useState("");const[stage,setStage]=useState("全部");const[selectedId,setSelectedId]=useState<string|null>(null);
-  useEffect(()=>{fetch("/api/modules/crm/records").then(async response=>{if(!response.ok)throw new Error();return response.json()}).then(body=>setRecords(body.items??[])).catch(()=>setRecordError("已确认客户记录暂时无法加载"))},[]);
-  const customers=useMemo(()=>mergeCustomers(data?.leads??[],records),[data?.leads,records]);
-  const filtered=useMemo(()=>customers.filter(customer=>{const search=`${customer.name} ${customer.ownerName} ${customer.source} ${customer.phone} ${customer.requirements}`.toLowerCase();return search.includes(keyword.trim().toLowerCase())&&(stage==="全部"||customer.stage===stage)}),[customers,keyword,stage]);
-  const selected=customers.find(customer=>customer.id===selectedId)??null;
-  if(isPending)return <div className="crm-loading"><span/><span/><span/></div>;
-  if(error||!data)return <section className="crm-error"><AlertTriangle/><h1>客户数据暂时无法加载</h1><button onClick={()=>void refetch()}>重新加载</button></section>;
-  if(selected)return <CustomerDetail customer={selected} ownerCanSeePrivate={user?.role==="owner"} onBack={()=>setSelectedId(null)}/>;
-  const highIntent=customers.filter(customer=>customer.probability>=70&&customer.stage!=="签约").length;const overdue=customers.filter(isOverdue).length;const expected=customers.filter(customer=>customer.stage!=="签约"&&customer.stage!=="流失").reduce((sum,customer)=>sum+customer.expectedAmount,0);const signed=customers.filter(customer=>customer.stage==="签约").length;
-  return <section className="crm-page"><header className="crm-heading"><div><span>CUSTOMER SALES CRM</span><h1>客户销售</h1><p>从线索、量房、设计、报价、谈单到签约，统一管理客户资料和每次跟进。</p></div>{user?.role==="owner"?<Link to="/agents" className="crm-agent-link"><Bot size={17}/>让小龙整理客户聊天<ChevronRight size={15}/></Link>:null}</header>
-    <section className="crm-metrics"><Metric icon={UsersRound} label="客户总数" value={`${customers.length}`}/><Metric icon={Target} label="高意向客户" value={`${highIntent}`} tone="gold"/><Metric icon={CalendarClock} label="逾期未跟进" value={`${overdue}`} tone={overdue?"danger":"success"}/><Metric icon={CircleDollarSign} label="预计商机金额" value={money(expected)}/><Metric icon={Home} label="已签约" value={`${signed}`} tone="success"/></section>
-    <SalesFunnel customers={customers} active={stage} onSelect={setStage}/>
-    <div className="crm-toolbar"><label><Search size={16}/><input value={keyword} onChange={event=>setKeyword(event.target.value)} placeholder="搜索客户、负责人、来源或需求"/></label><div>{["全部",...allStages].map(item=><button key={item} className={stage===item?"is-active":""} onClick={()=>setStage(item)}>{item}</button>)}</div></div>
-    {recordError?<p className="crm-inline-error">{recordError}</p>:null}
-    <div className="crm-table" role="table" aria-label="客户销售列表"><div className="crm-table-head" role="row"><span>客户</span><span>销售阶段</span><span>意向度</span><span>预计金额</span><span>负责人</span><span>下次跟进</span><span>来源</span><span/></div>{filtered.map(customer=><button key={customer.id} type="button" role="row" className="crm-row" onClick={()=>setSelectedId(customer.id)}><span className="crm-customer"><strong>{customer.name}</strong><small>{visiblePhone(customer.phone,user?.role==="owner")||"未留联系电话"}</small></span><span><StageBadge stage={customer.stage}/></span><span className="crm-probability"><i><b style={{width:`${customer.probability}%`}}/></i><small>{customer.probability}%</small></span><span>{money(customer.expectedAmount)}</span><span>{customer.ownerName}</span><span className={isOverdue(customer)?"crm-overdue":""}>{customer.nextActionAt?formatDate(customer.nextActionAt):"待安排"}</span><span>{customer.source||"待识别"}</span><ChevronRight size={15}/></button>)}{!filtered.length?<div className="crm-empty"><UsersRound size={28}/><h2>{customers.length?"没有符合筛选条件的客户":"暂无已确认客户"}</h2><p>{customers.length?"调整阶段或搜索条件后重试。":"小龙从企业微信提炼出客户线索后，会先推送老板确认，确认后进入这里。"}</p></div>:null}</div>
-    <p className="crm-source-note">客户资料来自正式客户记录和老板已确认的聊天提炼结果；未确认内容不计入销售漏斗。</p>
-  </section>
+export function CustomerManagementPage() {
+  const { user } = useAuth();
+  const { data, error, isPending, refetch } = useOwnerDashboard();
+  const [records, setRecords] = useState<ModuleRecord[]>([]);
+  const [overrides, setOverrides] = useState<
+    Record<string, Record<string, unknown>>
+  >({});
+  const [recordError, setRecordError] = useState("");
+  const [keyword, setKeyword] = useState("");
+  const [stage, setStage] = useState("全部");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  useEffect(() => {
+    fetch("/api/modules/crm/records")
+      .then(async (response) => {
+        if (!response.ok) throw new Error();
+        return response.json();
+      })
+      .then((body) => {
+        setRecords(body.items ?? []);
+        setOverrides(body.overrides ?? {});
+      })
+      .catch(() => setRecordError("已确认客户记录暂时无法加载"));
+  }, []);
+  const customers = useMemo(
+    () =>
+      applyCustomerOverrides(
+        mergeCustomers(data?.leads ?? [], records),
+        overrides,
+      ),
+    [data?.leads, records, overrides],
+  );
+  const filtered = useMemo(
+    () =>
+      customers.filter((customer) => {
+        const search =
+          `${customer.name} ${customer.ownerName} ${customer.source} ${customer.phone} ${customer.requirements}`.toLowerCase();
+        return (
+          search.includes(keyword.trim().toLowerCase()) &&
+          (stage === "全部" || customer.stage === stage)
+        );
+      }),
+    [customers, keyword, stage],
+  );
+  const selected =
+    customers.find((customer) => customer.id === selectedId) ?? null;
+  if (isPending)
+    return (
+      <div className="crm-loading">
+        <span />
+        <span />
+        <span />
+      </div>
+    );
+  if (error || !data)
+    return (
+      <section className="crm-error">
+        <AlertTriangle />
+        <h1>客户数据暂时无法加载</h1>
+        <button onClick={() => void refetch()}>重新加载</button>
+      </section>
+    );
+  if (selected)
+    return (
+      <CustomerDetail
+        customer={selected}
+        ownerCanSeePrivate={user?.role === "owner"}
+        onBack={() => setSelectedId(null)}
+        onSaved={(payload) =>
+          setOverrides((current) => ({ ...current, [selected.id]: payload }))
+        }
+      />
+    );
+  const highIntent = customers.filter(
+    (customer) => customer.probability >= 70 && customer.stage !== "签约",
+  ).length;
+  const overdue = customers.filter(isOverdue).length;
+  const expected = customers
+    .filter(
+      (customer) => customer.stage !== "签约" && customer.stage !== "流失",
+    )
+    .reduce((sum, customer) => sum + customer.expectedAmount, 0);
+  const signed = customers.filter(
+    (customer) => customer.stage === "签约",
+  ).length;
+  return (
+    <section className="crm-page">
+      <header className="crm-heading">
+        <div>
+          <span>CUSTOMER SALES CRM</span>
+          <h1>客户销售</h1>
+          <p>
+            从线索、量房、设计、报价、谈单到签约，统一管理客户资料和每次跟进。
+          </p>
+        </div>
+        {user?.role === "owner" ? (
+          <Link to="/agents" className="crm-agent-link">
+            <Bot size={17} />
+            让小龙整理客户聊天
+            <ChevronRight size={15} />
+          </Link>
+        ) : null}
+      </header>
+      <section className="crm-metrics">
+        <Metric
+          icon={UsersRound}
+          label="客户总数"
+          value={`${customers.length}`}
+        />
+        <Metric
+          icon={Target}
+          label="高意向客户"
+          value={`${highIntent}`}
+          tone="gold"
+        />
+        <Metric
+          icon={CalendarClock}
+          label="逾期未跟进"
+          value={`${overdue}`}
+          tone={overdue ? "danger" : "success"}
+        />
+        <Metric
+          icon={CircleDollarSign}
+          label="预计商机金额"
+          value={money(expected)}
+        />
+        <Metric icon={Home} label="已签约" value={`${signed}`} tone="success" />
+      </section>
+      <SalesFunnel customers={customers} active={stage} onSelect={setStage} />
+      <div className="crm-toolbar">
+        <label>
+          <Search size={16} />
+          <input
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            placeholder="搜索客户、负责人、来源或需求"
+          />
+        </label>
+        <div>
+          {["全部", ...allStages].map((item) => (
+            <button
+              key={item}
+              className={stage === item ? "is-active" : ""}
+              onClick={() => setStage(item)}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </div>
+      {recordError ? <p className="crm-inline-error">{recordError}</p> : null}
+      <div className="crm-table" role="table" aria-label="客户销售列表">
+        <div className="crm-table-head" role="row">
+          <span>客户</span>
+          <span>销售阶段</span>
+          <span>意向度</span>
+          <span>预计金额</span>
+          <span>负责人</span>
+          <span>下次跟进</span>
+          <span>来源</span>
+          <span />
+        </div>
+        {filtered.map((customer) => (
+          <button
+            key={customer.id}
+            type="button"
+            role="row"
+            className="crm-row"
+            onClick={() => setSelectedId(customer.id)}
+          >
+            <span className="crm-customer">
+              <strong>{customer.name}</strong>
+              <small>
+                {visiblePhone(customer.phone, user?.role === "owner") ||
+                  "未留联系电话"}
+              </small>
+            </span>
+            <span>
+              <StageBadge stage={customer.stage} />
+            </span>
+            <span className="crm-probability">
+              <i>
+                <b style={{ width: `${customer.probability}%` }} />
+              </i>
+              <small>{customer.probability}%</small>
+            </span>
+            <span>{money(customer.expectedAmount)}</span>
+            <span>{customer.ownerName}</span>
+            <span className={isOverdue(customer) ? "crm-overdue" : ""}>
+              {customer.nextActionAt
+                ? formatDate(customer.nextActionAt)
+                : "待安排"}
+            </span>
+            <span>{customer.source || "待识别"}</span>
+            <ChevronRight size={15} />
+          </button>
+        ))}
+        {!filtered.length ? (
+          <div className="crm-empty">
+            <UsersRound size={28} />
+            <h2>
+              {customers.length ? "没有符合筛选条件的客户" : "暂无已确认客户"}
+            </h2>
+            <p>
+              {customers.length
+                ? "调整阶段或搜索条件后重试。"
+                : "小龙从企业微信提炼出客户线索后，会先推送老板确认，确认后进入这里。"}
+            </p>
+          </div>
+        ) : null}
+      </div>
+      <p className="crm-source-note">
+        客户资料来自正式客户记录和老板已确认的聊天提炼结果；未确认内容不计入销售漏斗。
+      </p>
+    </section>
+  );
 }
 
-function SalesFunnel({customers,active,onSelect}:{customers:Customer[];active:string;onSelect:(stage:string)=>void}){return <section className="sales-funnel" aria-label="销售转化漏斗"><header><div><span>SALES PIPELINE</span><h2>家装客户转化流程</h2></div><small>点击阶段筛选客户</small></header><div>{salesStages.map((item,index)=>{const count=customers.filter(customer=>customer.stage===item).length;return <button key={item} className={active===item?"is-active":""} onClick={()=>onSelect(active===item?"全部":item)} style={{"--funnel-inset":`${index*3.2}%`} as CSSProperties}><span>{item}</span><strong>{count}</strong><small>{stageAction(item)}</small></button>})}</div></section>}
-function CustomerDetail({customer,ownerCanSeePrivate,onBack}:{customer:Customer;ownerCanSeePrivate:boolean;onBack:()=>void}){return <section className="customer-detail"><button className="customer-back" onClick={onBack}><ArrowLeft size={16}/>返回客户列表</button><header><div><span>CUSTOMER 360 PROFILE</span><h1>{customer.name}</h1><p>客户全景档案 · 跟进过程永久留痕</p></div><div><StageBadge stage={customer.stage}/><strong>{customer.probability}%</strong><small>成交意向</small></div></header><section className="customer-facts"><Fact icon={UserRound} label="负责人" value={customer.ownerName}/><Fact icon={CircleDollarSign} label="预计金额" value={money(customer.expectedAmount)}/><Fact icon={Clock3} label="下次跟进" value={customer.nextActionAt?formatDate(customer.nextActionAt):"待安排"}/><Fact icon={MessageSquareText} label="正式记录" value={`${customer.records.length} 条`}/></section><div className="customer-layout"><section className="customer-profile"><header><h2>客户与房屋信息</h2><span>已确认资料</span></header><dl><Profile label="联系电话" value={visiblePhone(customer.phone,ownerCanSeePrivate)||"待补充"}/><Profile label="客户来源" value={customer.source||"待识别"}/><Profile label="装修地址" value={customer.address||"待补充"}/><Profile label="户型" value={customer.houseType||"待补充"}/><Profile label="面积" value={customer.area||"待补充"}/><Profile label="预算" value={customer.budget||money(customer.expectedAmount)}/><Profile label="销售阶段" value={customer.stage}/><Profile label="最近沟通" value={customer.lastContactAt?formatDate(customer.lastContactAt):"暂无记录"}/></dl><div className="customer-requirements"><span>装修需求与关注点</span><p>{customer.requirements||"尚未形成已确认的客户需求。"}</p>{customer.tags.length?<div>{customer.tags.map(tag=><i key={tag}>{tag}</i>)}</div>:null}</div></section><section className="customer-timeline"><header><h2>跟进时间线</h2><span>{customer.records.length} 条</span></header>{customer.records.length?<ol>{customer.records.map(record=><li key={record.id}><i/><div><time>{formatDate(record.created_at)}</time><strong>{String(record.payload.title||"客户跟进")}</strong><p>{String(record.payload.summary||record.payload.details||record.payload.description||"已确认客户信息")}</p><small>{String(record.payload.owner||record.payload.ownerName||customer.ownerName)} · 已确认</small></div></li>)}</ol>:<div className="customer-timeline-empty"><MessageSquareText size={25}/><p>暂无更多已确认跟进记录</p></div>}</section></div></section>}
-function Metric({icon:Icon,label,value,tone=""}:{icon:typeof UsersRound;label:string;value:string;tone?:string}){return <div className={tone?`crm-metric--${tone}`:""}><Icon size={18}/><span>{label}</span><strong>{value}</strong></div>}
-function Fact({icon:Icon,label,value}:{icon:typeof UsersRound;label:string;value:string}){return <div><Icon size={17}/><span>{label}</span><strong>{value}</strong></div>}
-function Profile({label,value}:{label:string;value:string}){return <div><dt>{label}</dt><dd>{value}</dd></div>}
-function StageBadge({stage}:{stage:string}){return <span className={`crm-stage crm-stage--${stageTone(stage)}`}>{stage}</span>}
+function SalesFunnel({
+  customers,
+  active,
+  onSelect,
+}: {
+  customers: Customer[];
+  active: string;
+  onSelect: (stage: string) => void;
+}) {
+  return (
+    <section className="sales-funnel" aria-label="销售转化漏斗">
+      <header>
+        <div>
+          <span>SALES PIPELINE</span>
+          <h2>家装客户转化流程</h2>
+        </div>
+        <small>点击阶段筛选客户</small>
+      </header>
+      <div>
+        {salesStages.map((item, index) => {
+          const count = customers.filter(
+            (customer) => customer.stage === item,
+          ).length;
+          return (
+            <button
+              key={item}
+              className={active === item ? "is-active" : ""}
+              onClick={() => onSelect(active === item ? "全部" : item)}
+              style={{ "--funnel-inset": `${index * 3.2}%` } as CSSProperties}
+            >
+              <span>{item}</span>
+              <strong>{count}</strong>
+              <small>{stageAction(item)}</small>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+function CustomerDetail({
+  customer,
+  ownerCanSeePrivate,
+  onBack,
+  onSaved,
+}: {
+  customer: Customer;
+  ownerCanSeePrivate: boolean;
+  onBack: () => void;
+  onSaved: (payload: Record<string, unknown>) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  return (
+    <section className="customer-detail">
+      <div className="customer-detail-actions">
+        <button className="customer-back" onClick={onBack}>
+          <ArrowLeft size={16} />
+          返回客户列表
+        </button>
+        {ownerCanSeePrivate ? (
+          <button
+            className="customer-edit-button"
+            onClick={() => setEditing((value) => !value)}
+          >
+            {editing ? <X size={15} /> : <Pencil size={15} />}{" "}
+            {editing ? "取消编辑" : "编辑客户档案"}
+          </button>
+        ) : null}
+      </div>
+      <header>
+        <div>
+          <span>CUSTOMER 360 PROFILE</span>
+          <h1>{customer.name}</h1>
+          <p>客户全景档案 · 跟进过程永久留痕</p>
+        </div>
+        <div>
+          <StageBadge stage={customer.stage} />
+          <strong>{customer.probability}%</strong>
+          <small>成交意向</small>
+        </div>
+      </header>
+      {editing ? (
+        <CustomerEditor
+          customer={customer}
+          onSaved={(payload) => {
+            onSaved(payload);
+            setEditing(false);
+          }}
+        />
+      ) : null}
+      <section className="customer-facts">
+        <Fact icon={UserRound} label="负责人" value={customer.ownerName} />
+        <Fact
+          icon={CircleDollarSign}
+          label="预计金额"
+          value={money(customer.expectedAmount)}
+        />
+        <Fact
+          icon={Clock3}
+          label="下次跟进"
+          value={
+            customer.nextActionAt ? formatDate(customer.nextActionAt) : "待安排"
+          }
+        />
+        <Fact
+          icon={MessageSquareText}
+          label="正式记录"
+          value={`${customer.records.length} 条`}
+        />
+      </section>
+      <div className="customer-layout">
+        <section className="customer-profile">
+          <header>
+            <h2>客户与房屋信息</h2>
+            <span>已确认资料</span>
+          </header>
+          <dl>
+            <Profile
+              label="联系电话"
+              value={
+                visiblePhone(customer.phone, ownerCanSeePrivate) || "待补充"
+              }
+            />
+            <Profile label="客户来源" value={customer.source || "待识别"} />
+            <Profile label="装修地址" value={customer.address || "待补充"} />
+            <Profile label="户型" value={customer.houseType || "待补充"} />
+            <Profile label="面积" value={customer.area || "待补充"} />
+            <Profile
+              label="预算"
+              value={customer.budget || money(customer.expectedAmount)}
+            />
+            <Profile label="销售阶段" value={customer.stage} />
+            <Profile
+              label="最近沟通"
+              value={
+                customer.lastContactAt
+                  ? formatDate(customer.lastContactAt)
+                  : "暂无记录"
+              }
+            />
+          </dl>
+          <div className="customer-requirements">
+            <span>装修需求与关注点</span>
+            <p>{customer.requirements || "尚未形成已确认的客户需求。"}</p>
+            {customer.tags.length ? (
+              <div>
+                {customer.tags.map((tag) => (
+                  <i key={tag}>{tag}</i>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </section>
+        <section className="customer-timeline">
+          <header>
+            <h2>跟进时间线</h2>
+            <span>{customer.records.length} 条</span>
+          </header>
+          {customer.records.length ? (
+            <ol>
+              {customer.records.map((record) => (
+                <li key={record.id}>
+                  <i />
+                  <div>
+                    <time>{formatDate(record.created_at)}</time>
+                    <strong>
+                      {String(record.payload.title || "客户跟进")}
+                    </strong>
+                    <p>
+                      {String(
+                        record.payload.summary ||
+                          record.payload.details ||
+                          record.payload.description ||
+                          "已确认客户信息",
+                      )}
+                    </p>
+                    <small>
+                      {String(
+                        record.payload.owner ||
+                          record.payload.ownerName ||
+                          customer.ownerName,
+                      )}{" "}
+                      · 已确认
+                    </small>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <div className="customer-timeline-empty">
+              <MessageSquareText size={25} />
+              <p>暂无更多已确认跟进记录</p>
+            </div>
+          )}
+        </section>
+      </div>
+    </section>
+  );
+}
 
-function mergeCustomers(leads:Lead[],records:ModuleRecord[]):Customer[]{const map=new Map<string,Customer>();for(const lead of leads){const key=lead.customerName.trim().toLowerCase()||lead.id;map.set(key,{id:lead.id,name:lead.customerName,stage:normalizeStage(lead.stage),probability:lead.probability,expectedAmount:lead.expectedAmount,nextActionAt:lead.nextActionAt,ownerName:lead.ownerName,source:"",phone:"",address:"",houseType:"",area:"",budget:"",requirements:"",tags:[],lastContactAt:null,records:[]})}for(const record of records){const p=record.payload;const rawName=value(p,"customerName","customer_name","customer","name");const name=rawName||"未识别客户";const key=rawName.trim().toLowerCase()||`record:${record.id}`;const existing=map.get(key);const current=existing??{id:`crm-${record.id}`,name,stage:"新线索",probability:10,expectedAmount:0,nextActionAt:null,ownerName:"待分配",source:"",phone:"",address:"",houseType:"",area:"",budget:"",requirements:"",tags:[],lastContactAt:null,records:[]};const latest=current.records.length===0;const resolvedStage=normalizeStage(value(p,"stage","customerStage","status")||current.stage);if(latest){current.stage=resolvedStage;current.probability=numberValue(p.probability)??(existing?current.probability:probabilityByStage[resolvedStage]??10);current.expectedAmount=numberValue(p.expectedAmount,p.expected_amount,p.amount)??current.expectedAmount;current.nextActionAt=value(p,"nextActionAt","next_action_at","dueAt","due_date")||current.nextActionAt;current.ownerName=value(p,"owner","ownerName","salesperson")||current.ownerName;current.source=value(p,"source","leadSource","channel")||current.source;current.phone=value(p,"phone","mobile","customerPhone")||current.phone;current.address=value(p,"address","location","projectAddress")||current.address;current.houseType=value(p,"houseType","layout")||current.houseType;current.area=value(p,"area","houseArea")||current.area;current.budget=value(p,"budget","budgetRange")||current.budget;current.requirements=value(p,"requirements","requirement","summary","details","description")||current.requirements;const tags=arrayValue(p.tags);if(tags.length)current.tags=tags;current.lastContactAt=record.created_at}current.records.push(record);map.set(key,current)}return [...map.values()].sort((a,b)=>Number(isOverdue(b))-Number(isOverdue(a))||b.probability-a.probability)}
-function normalizeStage(input:string){const value=String(input||"");if(/流失|无效|放弃/.test(value))return"流失";if(/签约|成交|合同/.test(value))return"签约";if(/谈单|谈判|议价/.test(value))return"谈单";if(/报价|预算/.test(value))return"报价";if(/方案|设计/.test(value))return"出方案";if(/量房|测量/.test(value))return"量房";if(/联系|沟通|跟进/.test(value))return"已联系";return"新线索"}
-function stageAction(stage:string){return({新线索:"及时首联",已联系:"确认需求",量房:"预约上门",出方案:"沟通设计",报价:"发送报价",谈单:"推进决策",签约:"转入工地"} as Record<string,string>)[stage]}
-function stageTone(stage:string){return({新线索:"new",已联系:"contact",量房:"measure",出方案:"design",报价:"quote",谈单:"negotiate",签约:"signed",流失:"lost"} as Record<string,string>)[stage]||"new"}
-function isOverdue(customer:Customer){return Boolean(customer.nextActionAt&&new Date(customer.nextActionAt).getTime()<Date.now()&&!['签约','流失'].includes(customer.stage))}
-function value(payload:Record<string,unknown>,...keys:string[]){for(const key of keys){const found=payload[key];if(typeof found==="string"&&found.trim())return found.trim()}return""}
-function numberValue(...values:unknown[]){for(const item of values){const parsed=Number(item);if(item!==""&&item!=null&&Number.isFinite(parsed))return parsed}return null}
-function arrayValue(value:unknown){return Array.isArray(value)?value.filter((item):item is string=>typeof item==="string"):[]}
-function visiblePhone(phone:string,full:boolean){if(!phone)return"";if(full)return phone;return phone.replace(/(\d{3})\d+(\d{4})/,"$1****$2")}
-function money(value:number){return value?`¥${new Intl.NumberFormat("zh-CN",{maximumFractionDigits:0}).format(value)}`:"待确认"}
-function formatDate(value:string){const date=new Date(value);return Number.isNaN(date.getTime())?value:new Intl.DateTimeFormat("zh-CN",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).format(date)}
+function CustomerEditor({
+  customer,
+  onSaved,
+}: {
+  customer: Customer;
+  onSaved: (payload: Record<string, unknown>) => void;
+}) {
+  const [form, setForm] = useState({
+    name: customer.name,
+    stage: customer.stage,
+    probability: String(customer.probability),
+    expectedAmount: String(customer.expectedAmount),
+    nextActionAt: customer.nextActionAt || "",
+    ownerName: customer.ownerName,
+    source: customer.source,
+    phone: customer.phone,
+    address: customer.address,
+    houseType: customer.houseType,
+    area: customer.area,
+    budget: customer.budget,
+    requirements: customer.requirements,
+    tags: customer.tags.join("、"),
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  function field(key: string, value: string) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
+  async function save() {
+    const payload = {
+      ...form,
+      probability: Math.max(0, Math.min(100, Number(form.probability) || 0)),
+      expectedAmount: Math.max(0, Number(form.expectedAmount) || 0),
+      tags: form.tags
+        .split(/[、,，]/)
+        .map((value) => value.trim())
+        .filter(Boolean),
+    };
+    setSaving(true);
+    const response = await fetch(
+      `/api/modules/crm/entities/${encodeURIComponent(customer.id)}`,
+      {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      },
+    );
+    setSaving(false);
+    if (!response.ok) {
+      setError("客户档案保存失败");
+      return;
+    }
+    onSaved(payload);
+  }
+  return (
+    <section className="customer-profile-editor">
+      <header>
+        <strong>编辑客户正式档案</strong>
+        <small>所有字段均可自定义，保存后立即用于客户列表和详情。</small>
+      </header>
+      <div>
+        {Object.entries(form).map(([key, value]) => (
+          <label
+            key={key}
+            className={["requirements", "address"].includes(key) ? "wide" : ""}
+          >
+            {customerFieldLabel(key)}
+            {key === "stage" ? (
+              <select
+                value={value}
+                onChange={(event) => field(key, event.target.value)}
+              >
+                {allStages.map((stage) => (
+                  <option key={stage}>{stage}</option>
+                ))}
+              </select>
+            ) : key === "requirements" ? (
+              <textarea
+                value={value}
+                onChange={(event) => field(key, event.target.value)}
+              />
+            ) : (
+              <input
+                type={
+                  ["probability", "expectedAmount"].includes(key)
+                    ? "number"
+                    : "text"
+                }
+                value={value}
+                onChange={(event) => field(key, event.target.value)}
+              />
+            )}
+          </label>
+        ))}
+      </div>
+      {error ? <p role="alert">{error}</p> : null}
+      <button
+        disabled={saving || !form.name.trim()}
+        onClick={() => void save()}
+      >
+        <Check size={15} />
+        {saving ? "保存中…" : "保存客户档案"}
+      </button>
+    </section>
+  );
+}
+function Metric({
+  icon: Icon,
+  label,
+  value,
+  tone = "",
+}: {
+  icon: typeof UsersRound;
+  label: string;
+  value: string;
+  tone?: string;
+}) {
+  return (
+    <div className={tone ? `crm-metric--${tone}` : ""}>
+      <Icon size={18} />
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+function Fact({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof UsersRound;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div>
+      <Icon size={17} />
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+function Profile({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
+function StageBadge({ stage }: { stage: string }) {
+  return (
+    <span className={`crm-stage crm-stage--${stageTone(stage)}`}>{stage}</span>
+  );
+}
+
+function mergeCustomers(leads: Lead[], records: ModuleRecord[]): Customer[] {
+  const map = new Map<string, Customer>();
+  for (const lead of leads) {
+    const key = lead.customerName.trim().toLowerCase() || lead.id;
+    map.set(key, {
+      id: lead.id,
+      name: lead.customerName,
+      stage: normalizeStage(lead.stage),
+      probability: lead.probability,
+      expectedAmount: lead.expectedAmount,
+      nextActionAt: lead.nextActionAt,
+      ownerName: lead.ownerName,
+      source: "",
+      phone: "",
+      address: "",
+      houseType: "",
+      area: "",
+      budget: "",
+      requirements: "",
+      tags: [],
+      lastContactAt: null,
+      records: [],
+    });
+  }
+  for (const record of records) {
+    const p = record.payload;
+    const rawName = value(
+      p,
+      "customerName",
+      "customer_name",
+      "customer",
+      "name",
+    );
+    const name = rawName || "未识别客户";
+    const key = rawName.trim().toLowerCase() || `record:${record.id}`;
+    const existing = map.get(key);
+    const current = existing ?? {
+      id: `crm-${record.id}`,
+      name,
+      stage: "新线索",
+      probability: 10,
+      expectedAmount: 0,
+      nextActionAt: null,
+      ownerName: "待分配",
+      source: "",
+      phone: "",
+      address: "",
+      houseType: "",
+      area: "",
+      budget: "",
+      requirements: "",
+      tags: [],
+      lastContactAt: null,
+      records: [],
+    };
+    const latest = current.records.length === 0;
+    const resolvedStage = normalizeStage(
+      value(p, "stage", "customerStage", "status") || current.stage,
+    );
+    if (latest) {
+      current.stage = resolvedStage;
+      current.probability =
+        numberValue(p.probability) ??
+        (existing
+          ? current.probability
+          : (probabilityByStage[resolvedStage] ?? 10));
+      current.expectedAmount =
+        numberValue(p.expectedAmount, p.expected_amount, p.amount) ??
+        current.expectedAmount;
+      current.nextActionAt =
+        value(p, "nextActionAt", "next_action_at", "dueAt", "due_date") ||
+        current.nextActionAt;
+      current.ownerName =
+        value(p, "owner", "ownerName", "salesperson") || current.ownerName;
+      current.source =
+        value(p, "source", "leadSource", "channel") || current.source;
+      current.phone =
+        value(p, "phone", "mobile", "customerPhone") || current.phone;
+      current.address =
+        value(p, "address", "location", "projectAddress") || current.address;
+      current.houseType = value(p, "houseType", "layout") || current.houseType;
+      current.area = value(p, "area", "houseArea") || current.area;
+      current.budget = value(p, "budget", "budgetRange") || current.budget;
+      current.requirements =
+        value(
+          p,
+          "requirements",
+          "requirement",
+          "summary",
+          "details",
+          "description",
+        ) || current.requirements;
+      const tags = arrayValue(p.tags);
+      if (tags.length) current.tags = tags;
+      current.lastContactAt = record.created_at;
+    }
+    current.records.push(record);
+    map.set(key, current);
+  }
+  return [...map.values()].sort(
+    (a, b) =>
+      Number(isOverdue(b)) - Number(isOverdue(a)) ||
+      b.probability - a.probability,
+  );
+}
+function applyCustomerOverrides(
+  customers: Customer[],
+  overrides: Record<string, Record<string, unknown>>,
+) {
+  return customers.map((customer) => {
+    const item = overrides[customer.id];
+    if (!item) return customer;
+    return {
+      ...customer,
+      name: value(item, "name") || customer.name,
+      stage: value(item, "stage") || customer.stage,
+      probability: numberValue(item.probability) ?? customer.probability,
+      expectedAmount:
+        numberValue(item.expectedAmount) ?? customer.expectedAmount,
+      nextActionAt: value(item, "nextActionAt") || null,
+      ownerName: value(item, "ownerName") || customer.ownerName,
+      source: value(item, "source"),
+      phone: value(item, "phone"),
+      address: value(item, "address"),
+      houseType: value(item, "houseType"),
+      area: value(item, "area"),
+      budget: value(item, "budget"),
+      requirements: value(item, "requirements"),
+      tags: arrayValue(item.tags),
+    };
+  });
+}
+function customerFieldLabel(key: string) {
+  return (
+    (
+      {
+        name: "客户姓名",
+        stage: "销售阶段",
+        probability: "成交意向（0-100）",
+        expectedAmount: "预计金额",
+        nextActionAt: "下次跟进时间",
+        ownerName: "负责人",
+        source: "客户来源",
+        phone: "联系电话",
+        address: "装修地址",
+        houseType: "户型",
+        area: "面积",
+        budget: "预算",
+        requirements: "装修需求与关注点",
+        tags: "客户标签（顿号分隔）",
+      } as Record<string, string>
+    )[key] || key
+  );
+}
+function normalizeStage(input: string) {
+  const value = String(input || "");
+  if (/流失|无效|放弃/.test(value)) return "流失";
+  if (/签约|成交|合同/.test(value)) return "签约";
+  if (/谈单|谈判|议价/.test(value)) return "谈单";
+  if (/报价|预算/.test(value)) return "报价";
+  if (/方案|设计/.test(value)) return "出方案";
+  if (/量房|测量/.test(value)) return "量房";
+  if (/联系|沟通|跟进/.test(value)) return "已联系";
+  return "新线索";
+}
+function stageAction(stage: string) {
+  return (
+    {
+      新线索: "及时首联",
+      已联系: "确认需求",
+      量房: "预约上门",
+      出方案: "沟通设计",
+      报价: "发送报价",
+      谈单: "推进决策",
+      签约: "转入工地",
+    } as Record<string, string>
+  )[stage];
+}
+function stageTone(stage: string) {
+  return (
+    (
+      {
+        新线索: "new",
+        已联系: "contact",
+        量房: "measure",
+        出方案: "design",
+        报价: "quote",
+        谈单: "negotiate",
+        签约: "signed",
+        流失: "lost",
+      } as Record<string, string>
+    )[stage] || "new"
+  );
+}
+function isOverdue(customer: Customer) {
+  return Boolean(
+    customer.nextActionAt &&
+      new Date(customer.nextActionAt).getTime() < Date.now() &&
+      !["签约", "流失"].includes(customer.stage),
+  );
+}
+function value(payload: Record<string, unknown>, ...keys: string[]) {
+  for (const key of keys) {
+    const found = payload[key];
+    if (typeof found === "string" && found.trim()) return found.trim();
+  }
+  return "";
+}
+function numberValue(...values: unknown[]) {
+  for (const item of values) {
+    const parsed = Number(item);
+    if (item !== "" && item != null && Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+function arrayValue(value: unknown) {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+}
+function visiblePhone(phone: string, full: boolean) {
+  if (!phone) return "";
+  if (full) return phone;
+  return phone.replace(/(\d{3})\d+(\d{4})/, "$1****$2");
+}
+function money(value: number) {
+  return value
+    ? `¥${new Intl.NumberFormat("zh-CN", { maximumFractionDigits: 0 }).format(value)}`
+    : "待确认";
+}
+function formatDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : new Intl.DateTimeFormat("zh-CN", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(date);
+}
