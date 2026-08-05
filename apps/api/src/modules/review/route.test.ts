@@ -69,6 +69,12 @@ class MemoryStore implements ManagementStore {
     c.version++;
     return c;
   }
+  async correctCandidate(id: string, v: number, input: any) {
+    return this.updateCandidate(id, v, input);
+  }
+  async listAgentLearning() {
+    return [];
+  }
   async confirmCandidate(
     id: string,
     v: number,

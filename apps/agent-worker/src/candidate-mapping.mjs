@@ -33,6 +33,7 @@ export function toManagementCandidate(draft) {
       sourceCount: Number(draft.source_count) || 0,
       agentReasoning: String(draft.ai_reasoning || "").trim(),
       extractedAt: dateValue(draft.updated_at),
+      sourceDraftId: Number(draft.draft_id),
     },
   }
 }

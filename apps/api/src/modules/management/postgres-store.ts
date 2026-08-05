@@ -34,8 +34,10 @@ export class PostgresManagementStore implements ManagementStore {
     CREATE TABLE IF NOT EXISTS sender_aliases (sender_id text PRIMARY KEY,display_name text NOT NULL,updated_by uuid NOT NULL REFERENCES management_users(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
     CREATE TABLE IF NOT EXISTS module_entity_overrides (target_module text NOT NULL,entity_key text NOT NULL,payload jsonb NOT NULL,updated_by uuid NOT NULL REFERENCES management_users(id),created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(target_module,entity_key));
     CREATE TABLE IF NOT EXISTS interface_text_settings (text_key text PRIMARY KEY, text_value text NOT NULL, updated_by uuid NOT NULL REFERENCES management_users(id), updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE IF NOT EXISTS agent_learning_feedback (id uuid PRIMARY KEY, candidate_id uuid NOT NULL REFERENCES agent_candidates(id), source_key text NOT NULL, action text NOT NULL CHECK(action IN ('corrected','approved','rejected')), before_module text NOT NULL, before_kind text NOT NULL, before_payload jsonb NOT NULL, after_module text, after_kind text, after_payload jsonb, correction_note text NOT NULL DEFAULT '', actor_id uuid NOT NULL REFERENCES management_users(id), created_at timestamptz NOT NULL DEFAULT now());
     CREATE INDEX IF NOT EXISTS idx_agent_candidates_status_created ON agent_candidates(status, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_agent_run_requests_status_time ON agent_run_requests(status, requested_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_agent_learning_created ON agent_learning_feedback(created_at DESC);
     ALTER TABLE agent_candidates DROP CONSTRAINT IF EXISTS agent_candidates_target_module_check;
     ALTER TABLE agent_candidates ADD CONSTRAINT agent_candidates_target_module_check CHECK(target_module IN ('projects','procurement','crm','finance','inventory','tasks','alerts'));
     ALTER TABLE management_users DROP CONSTRAINT IF EXISTS management_users_role_check;
@@ -221,6 +223,33 @@ export class PostgresManagementStore implements ManagementStore {
       return candidate(u.rows[0]);
     });
   }
+  async correctCandidate(
+    id: string,
+    version: number,
+    input: Pick<AgentCandidate, "module" | "kind" | "payload">,
+    actorId: string,
+    correctionNote: string,
+  ) {
+    return this.transaction(async (c) => {
+      const r = await c.query(`SELECT * FROM agent_candidates WHERE id=$1 FOR UPDATE`, [id]);
+      const x = r.rows[0];
+      if (!x || x.status !== "pending_review" || x.version !== version)
+        throw new Error("候选状态或版本已变化");
+      const u = await c.query(
+        `UPDATE agent_candidates SET target_module=$2,kind=$3,payload=$4,version=version+1 WHERE id=$1 RETURNING *`,
+        [id, input.module, input.kind, input.payload],
+      );
+      await c.query(
+        `INSERT INTO agent_learning_feedback(id,candidate_id,source_key,action,before_module,before_kind,before_payload,after_module,after_kind,after_payload,correction_note,actor_id) VALUES($1,$2,$3,'corrected',$4,$5,$6,$7,$8,$9,$10,$11)`,
+        [randomUUID(), id, x.source_key, x.target_module, x.kind, x.payload, input.module, input.kind, input.payload, correctionNote, actorId],
+      );
+      await c.query(
+        `INSERT INTO audit_entries(id,actor_id,action,object_type,object_id,details) VALUES($1,$2,'candidate.agent_corrected','agent_candidate',$3,$4)`,
+        [randomUUID(), actorId, id, { correctionNote, fromModule: x.target_module, toModule: input.module, fromKind: x.kind, toKind: input.kind }],
+      );
+      return candidate(u.rows[0]);
+    });
+  }
   async confirmCandidate(
     id: string,
     version: number,
@@ -260,6 +289,10 @@ export class PostgresManagementStore implements ManagementStore {
         `INSERT INTO audit_entries(id,actor_id,action,object_type,object_id,details) VALUES($1,$2,'candidate.projected','agent_candidate',$3,$4)`,
         [randomUUID(), actorId, id, { module: x.target_module, kind: x.kind }],
       );
+      await c.query(
+        `INSERT INTO agent_learning_feedback(id,candidate_id,source_key,action,before_module,before_kind,before_payload,after_module,after_kind,after_payload,actor_id) VALUES($1,$2,$3,'approved',$4,$5,$6,$4,$5,$7,$8)`,
+        [randomUUID(), id, x.source_key, x.target_module, x.kind, x.payload, finalPayload, actorId],
+      );
       return candidate(u.rows[0]);
     });
   }
@@ -279,8 +312,20 @@ export class PostgresManagementStore implements ManagementStore {
         `INSERT INTO review_decisions(id,candidate_id,actor_id,decision,reason) VALUES($1,$2,$3,'rejected',$4)`,
         [randomUUID(), id, actorId, reason],
       );
+      const x = u.rows[0];
+      await c.query(
+        `INSERT INTO agent_learning_feedback(id,candidate_id,source_key,action,before_module,before_kind,before_payload,correction_note,actor_id) VALUES($1,$2,$3,'rejected',$4,$5,$6,$7,$8)`,
+        [randomUUID(), id, x.source_key, x.target_module, x.kind, x.payload, reason, actorId],
+      );
       return candidate(u.rows[0]);
     });
+  }
+  async listAgentLearning(limit: number) {
+    const r = await this.pool.query(
+      `SELECT id,source_key,action,before_module,before_kind,before_payload,after_module,after_kind,after_payload,correction_note,created_at FROM agent_learning_feedback ORDER BY created_at DESC LIMIT $1`,
+      [limit],
+    );
+    return r.rows;
   }
   async listModuleRecords(module: CandidateModule) {
     const r = await this.pool.query(

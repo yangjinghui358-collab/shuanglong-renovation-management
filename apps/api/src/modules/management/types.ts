@@ -64,6 +64,13 @@ export interface ManagementStore {
     input: Pick<AgentCandidate, "module" | "kind" | "payload">,
     actorId: string,
   ): Promise<AgentCandidate>;
+  correctCandidate(
+    id: string,
+    version: number,
+    input: Pick<AgentCandidate, "module" | "kind" | "payload">,
+    actorId: string,
+    correctionNote: string,
+  ): Promise<AgentCandidate>;
   confirmCandidate(
     id: string,
     version: number,
@@ -112,4 +119,5 @@ export interface ManagementStore {
     values: Record<string, string>,
     actorId: string,
   ): Promise<Record<string, string>>;
+  listAgentLearning(limit: number): Promise<Array<Record<string, unknown>>>;
 }

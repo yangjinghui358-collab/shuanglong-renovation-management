@@ -203,6 +203,14 @@ export function registerReviewRoutes(
       user.id,
     );
   });
+  app.post("/api/review/candidates/:id/correct", async (request, reply) => {
+    const user = await owner(request, reply, store);
+    if (!user) return;
+    const b = request.body as { version?: number; module?: CandidateModule; kind?: string; payload?: Record<string, unknown>; correctionNote?: string };
+    if (!Number.isInteger(b.version) || !b.module || !candidateModules.includes(b.module) || !validKind(b.kind) || !validPayload(b.payload) || !b.correctionNote?.trim() || b.correctionNote.trim().length > 1000)
+      return reply.code(400).send({ error: "请填写纠正说明和完整的正确结果" });
+    return store.correctCandidate((request.params as { id: string }).id, b.version!, { module: b.module, kind: b.kind.trim(), payload: b.payload }, user.id, b.correctionNote.trim());
+  });
   app.get("/api/review/candidates/:id/evidence", async (request, reply) => {
     if (!(await owner(request, reply, store))) return;
     if (!evidenceReader)
@@ -342,5 +350,10 @@ export function registerReviewRoutes(
     if (!agentKeys.includes(key))
       return reply.code(404).send({ error: "Agent 不存在" });
     return reply.code(202).send(await store.queueAgentRun(key, user.id));
+  });
+  app.get("/api/agent/learning", async (request, reply) => {
+    const bearer = request.headers.authorization?.replace(/^Bearer\s+/i, "") ?? "";
+    if (!bearer || !safeToken(bearer, agentToken)) return reply.code(401).send({ error: "Agent 凭据无效" });
+    return { items: await store.listAgentLearning(100) };
   });
 }
