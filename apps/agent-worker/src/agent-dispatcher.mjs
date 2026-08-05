@@ -35,6 +35,7 @@ async function claimJob() {
 
 async function runAgent(key) {
   if (key === "chat_archive") {
+    await syncLearningFeedback()
     let refresh = "succeeded"
     try { await runProcess("/usr/bin/node", [required("MANAGEMENT_AGENT_REVIEW_SCRIPT")]) }
     catch { refresh = "failed_using_existing_drafts" }
@@ -45,6 +46,20 @@ async function runAgent(key) {
   if (key === "todo_reminder") return submitTodoReminders()
   if (key === "owner_alert") return submitOwnerAlerts()
   throw new Error("未知 Agent")
+}
+
+async function syncLearningFeedback() {
+  const response = await fetch(`${apiBaseUrl}/api/agent/learning`, { headers: { authorization: `Bearer ${agentToken}` }, signal: AbortSignal.timeout(15_000) })
+  if (!response.ok) throw new Error(`Agent 学习接口返回 HTTP ${response.status}`)
+  const items = (await response.json()).items || []
+  for (const item of items.reverse()) {
+    const sourceDraftId = Number(item.before_payload?.sourceDraftId || item.after_payload?.sourceDraftId)
+    if (!sourceDraftId) continue
+    await sourcePool.query(`INSERT INTO agent_feedback(draft_id,action,before_payload,after_payload,correction_note,reviewer_id)
+      SELECT $1,$2,$3,$4,$5,'management-owner' WHERE NOT EXISTS (
+        SELECT 1 FROM agent_feedback WHERE draft_id=$1 AND action=$2 AND correction_note=$5 AND before_payload=$3::jsonb AND after_payload=$4::jsonb
+      )`, [sourceDraftId, item.action === "corrected" ? "edited" : item.action, item.before_payload || {}, item.after_payload || {}, item.correction_note || ""])
+  }
 }
 
 async function syncChatDrafts() {

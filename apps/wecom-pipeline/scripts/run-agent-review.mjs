@@ -30,6 +30,8 @@ try {
     FROM industry_terms WHERE enabled=TRUE ORDER BY category,term LIMIT 300`)).rows
   const activePrompt = (await db.query(`SELECT prompt_id,system_prompt FROM prompt_versions
     WHERE agent_key=$1 AND status='active' ORDER BY version DESC LIMIT 1`, [config.agentKey])).rows[0]
+  const feedback = (await db.query(`SELECT action,before_payload,after_payload,correction_note
+    FROM agent_feedback ORDER BY created_at DESC LIMIT 50`)).rows.reverse()
 
   const messagesWithRefs = messages.map((item, index) => ({ ...item, ref: `M${String(index + 1).padStart(3, '0')}` }))
   const transcript = messagesWithRefs.map(item =>
@@ -47,7 +49,10 @@ customer_requirement用于客户销售板块。仅从聊天明确内容提取：
 各模块优先使用这些字段：施工进度 summary/phase/location/progress/owner/status/next_action；待办 details/owner/due_date/priority/acceptanceCriteria；风险 description/impact/owner/dueAt/recommendation/needsOwnerDecision；采购 materialName/brand/model/specification/quantity/requiredAt/budget/applicant/supplier；到货验收 materialName/quantity/arrivedAt/acceptanceResult/inspector/exception；阶段验收 phase/location/acceptanceResult/inspector/customerConfirmed/corrections/reinspectionAt；客户变更 customerName/changeContent/event_date/amountImpact/scheduleImpact/customerConfirmed/owner；财务 customerName/projectName/paymentType/direction/amount/paymentStage/dueAt/paymentStatus/owner。
 digest必须且只能有一条，概括当前项目状态、已完成、进行中、待确认、风险和下一步。
 只输出JSON对象，格式：
-{"drafts":[{"module_type":"todo","title":"","payload":{"summary":"","owner":"","status":"","event_date":"","due_date":"","phase":"","location":"","progress":0,"risk_level":"","next_action":""},"source_refs":["M001"],"confidence":0.0,"ai_reasoning":""}]}。`
+{"drafts":[{"module_type":"todo","title":"","payload":{"summary":"","owner":"","status":"","event_date":"","due_date":"","phase":"","location":"","progress":0,"risk_level":"","next_action":""},"source_refs":["M001"],"confidence":0.0,"ai_reasoning":""}]}。
+
+以下是老板过去对 Agent 结果的确认、纠正和驳回案例。把纠正当作高优先级示例，遇到相似表达时遵循；不要复制案例中的具体人名、金额或日期到无关事项：
+${JSON.stringify(feedback)}`
   const response = await fetch(config.aiBaseUrl.replace(/\/$/, '') + '/chat/completions', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${config.aiApiKey}` },
