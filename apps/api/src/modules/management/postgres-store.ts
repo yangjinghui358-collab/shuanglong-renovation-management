@@ -432,10 +432,10 @@ export class PostgresManagementStore implements ManagementStore {
   }
   async replaceTextSettings(values: Record<string, string>, actorId: string) {
     return this.transaction(async (client) => {
-      await client.query(`DELETE FROM interface_text_settings`);
+      await client.query(`DELETE FROM interface_text_settings WHERE text_key NOT LIKE 'ui.page.%'`);
       for (const [key, value] of Object.entries(values)) {
         await client.query(
-          `INSERT INTO interface_text_settings(text_key,text_value,updated_by) VALUES($1,$2,$3)`,
+          `INSERT INTO interface_text_settings(text_key,text_value,updated_by) VALUES($1,$2,$3) ON CONFLICT(text_key) DO UPDATE SET text_value=excluded.text_value,updated_by=excluded.updated_by,updated_at=now()`,
           [key, value, actorId],
         );
       }
