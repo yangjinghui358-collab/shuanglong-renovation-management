@@ -21,6 +21,18 @@ describe("loadEnv", () => {
     );
   });
 
+  it("encodes the libpq options separator as a percent-encoded space", () => {
+    const result = loadEnv({
+      WECOM_DATABASE_URL: "postgresql://reader@127.0.0.1:5432/wecom_chat",
+      ...base,
+    });
+
+    expect(result.WECOM_DATABASE_URL).toContain(
+      "options=-c%20default_transaction_read_only%3Don",
+    );
+    expect(result.WECOM_DATABASE_URL).not.toContain("options=-c+");
+  });
+
   it("rejects an invalid database URL", () => {
     expect(() => loadEnv({ WECOM_DATABASE_URL: "not-a-url", ...base })).toThrow();
   });
