@@ -113,6 +113,22 @@ describe("createWecomDashboardReader", () => {
     );
   });
 
+  it("does not truncate UTF-8 evidence inside PostgreSQL", async () => {
+    const captured: string[] = [];
+    const query = vi.fn(async (input: unknown) => {
+      captured.push(sqlOf(input));
+      return { rows: [] };
+    });
+
+    await createWecomDashboardReader({ query } as never).read();
+
+    const projectQuery = captured.find((sql) =>
+      sql.toUpperCase().includes("FROM GROUP_PROJECTS"),
+    );
+    expect(projectQuery).toContain("e.raw_chat AS excerpt");
+    expect(projectQuery).not.toContain("left(e.raw_chat");
+  });
+
   it("rolls back when a read query fails", async () => {
     const captured: string[] = [];
     const query = vi.fn(async (input: unknown) => {

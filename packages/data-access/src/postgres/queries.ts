@@ -12,7 +12,7 @@ export const ACTIVE_PROJECTS_SQL = `
          t.id::text AS todo_id,
          r.id::text AS risk_id,
          e.id::text AS evidence_id,
-         left(e.raw_chat, 160) AS excerpt,
+         e.raw_chat AS excerpt,
          e.created_at AS occurred_at,
          null::text AS sender_name
     FROM group_projects gp
