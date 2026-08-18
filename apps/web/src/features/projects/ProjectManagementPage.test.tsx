@@ -11,13 +11,16 @@ describe("ProjectManagementPage",()=>{
   it("shows formal project overview and opens detail tabs",async()=>{
     render(<MemoryRouter><ProjectManagementPage/></MemoryRouter>);
     expect(screen.getByRole("heading",{name:"工地管理"})).toBeInTheDocument();
-    expect(screen.getByText("正式工地一号")).toBeInTheDocument();
-    await waitFor(()=>expect(screen.getByRole("button",{name:/所有工地待办 1/})).toBeInTheDocument());
+    expect(screen.getAllByText("全流程演示工地").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("演示数据").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("正式工地一号").length).toBeGreaterThan(0);
+    await waitFor(()=>expect(screen.getByRole("button",{name:/所有工地待办/})).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button",{name:/所有工地待办/}));
     expect(screen.getByRole("heading",{name:"所有工地待办"})).toBeInTheDocument();
     expect(screen.getByText("水电验收 · 群聊 3 条证据")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button",{name:"工地总览"}));
-    fireEvent.click(screen.getByRole("row",{name:/正式工地一号/}));
+    fireEvent.click(screen.getByRole("button",{name:/正式工地一号/}));
+    fireEvent.click(screen.getByRole("button",{name:"查看完整档案"}));
     expect(screen.getByRole("heading",{name:"正式工地一号"})).toBeInTheDocument();
     expect(screen.getByRole("region",{name:"整体施工流程"})).toBeInTheDocument();
     expect(screen.getAllByText("水电").length).toBeGreaterThan(0);
@@ -26,6 +29,7 @@ describe("ProjectManagementPage",()=>{
     expect(screen.getAllByText("美缝防护").length).toBeGreaterThan(0);
     expect(screen.getAllByText("收尾").length).toBeGreaterThan(0);
     expect(screen.getByText(/总工期 83 天/)).toBeInTheDocument();
+    expect(screen.getByText("70 个执行项")).toBeInTheDocument();
     expect(screen.getAllByText("当前施工").length).toBeGreaterThan(0);
     expect(screen.getByText("下一阶段：")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button",{name:/验收记录/}));

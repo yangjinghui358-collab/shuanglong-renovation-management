@@ -44,6 +44,19 @@ type Tab =
   | "acceptance"
   | "activity"
   | "evidence";
+const fullFlowDemoProject: Project = {
+  id: "demo-full-construction-flow",
+  name: "全流程演示工地",
+  stage: "木工施工",
+  progress: 39,
+  riskLevel: "medium",
+  delayDays: 0,
+  ownerName: "关丙刚（演示）",
+  issue: "用于演示装修进度表中的全部施工、验收、收款和结算流程。",
+  evidence: [],
+  status: "demo",
+  statusLabel: "演示数据",
+};
 const tabs: Array<{ key: Tab; label: string; icon: typeof HardHat }> = [
   { key: "overview", label: "项目概况", icon: HardHat },
   { key: "progress", label: "施工进度", icon: Clock3 },
@@ -74,15 +87,24 @@ const constructionStages = [
 
 const scheduleNodes = [
   ["开工准备", "签单、收定金、组建施工群", "店长"], ["开工准备", "签单金额交给会计入账", "店长"], ["开工准备", "效果图（7天）", "设计师"], ["开工准备", "群内发电器清单", "设计师"], ["开工准备", "交钥匙、施工部交底（1天）", "设计师"], ["开工准备", "确认吉日开工时间", "设计师"], ["开工准备", "收第一次装修款", "店长"],
-  ["水电", "拆除墙体、垃圾清理、瓦工砌筑", "项目经理"], ["水电", "水电交底", "设计师"], ["水电", "水电施工", "项目经理"], ["水电", "水电验收、验收单签字", "项目经理、设计师"], ["水电", "统计利润", "会计"],
-  ["防水", "水泥沙子进场、防水施工", "项目经理"], ["防水", "陪客户选瓷砖、瓷砖排版", "设计师"], ["防水", "瓷砖进场、防水验收", "项目经理"],
-  ["瓦工施工", "瓦工交底", "项目经理、设计师"], ["瓦工施工", "瓦工铺贴、地漏止逆阀送货、垃圾清理", "项目经理"], ["瓦工施工", "瓷砖验收、验收单签字、返料", "项目经理、设计师"], ["瓦工施工", "统计利润", "会计"],
-  ["美缝防护", "收第二次装修款", "店长"], ["美缝防护", "美缝施工、验收、地面保护", "项目经理"], ["美缝防护", "提醒客户电器尺寸", "设计师"],
-  ["木工施工", "木工交底", "项目经理、设计师"], ["木工施工", "木料进场、木工施工", "项目经理"], ["木工施工", "木门、定制、理石量尺", "项目经理、店长"], ["木工施工", "木工验收", "项目经理、设计师"], ["木工施工", "统计利润", "会计"],
-  ["油工施工", "石膏顺平（7天）", "项目经理"], ["油工施工", "定制量尺下单（7天内完成）", "定制设计师"], ["油工施工", "收第三次装修款", "店长"], ["油工施工", "理石安装、腻子、晾干、打砂纸喷漆", "项目经理"], ["油工施工", "群内发定制出厂时间（20天）", "定制设计师"], ["油工施工", "油工验收、验收单签字", "项目经理"], ["油工施工", "统计利润", "会计"],
-  ["定制安装", "定制入场、安装、木门安装、补料", "定制设计师"], ["定制安装", "理石量尺", "定制设计师、店长"], ["定制安装", "吊顶量尺、垃圾清理", "项目经理"], ["定制安装", "定制验收、验收单签字", "定制设计师、项目经理"],
-  ["收尾", "灯具、开关插座、烟机、热水器入场安装", "项目经理"], ["收尾", "撤防护、开荒保洁、整体验收自检", "项目经理"], ["收尾", "找零（2天）、整体验收并签验收单", "项目经理、设计师"], ["收尾", "交尾款、签质保单", "店长"], ["收尾", "会计统计利润、结账收尾款（5天）", "会计"],
+  ["水电", "拆除墙体", "项目经理"], ["水电", "垃圾清理", "项目经理"], ["水电", "瓦工砌筑", "项目经理"], ["水电", "水电交底", "设计师"], ["水电", "水电施工", "项目经理"], ["水电", "水电验收、验收单签字", "项目经理、设计师"], ["水电", "统计利润", "会计"],
+  ["防水", "水泥沙子进场", "项目经理"], ["防水", "防水施工", "项目经理"], ["防水", "陪客户选瓷砖、瓷砖排版", "设计师"], ["防水", "瓷砖进场", "项目经理"], ["防水", "防水验收", "项目经理"],
+  ["瓦工施工", "瓦工交底", "项目经理、设计师"], ["瓦工施工", "瓦工辅贴", "项目经理"], ["瓦工施工", "地漏、止逆阀送货", "项目经理"], ["瓦工施工", "垃圾清理", "项目经理"], ["瓦工施工", "瓷砖验收、验收单签字", "项目经理、设计师"], ["瓦工施工", "瓷砖返料", "项目经理"], ["瓦工施工", "统计利润", "会计"],
+  ["美缝防护", "收第二次装修款", "店长"], ["美缝防护", "美缝施工", "项目经理"], ["美缝防护", "提醒客户电器尺寸", "设计师"], ["美缝防护", "美缝验收", "项目经理"], ["美缝防护", "地面保护", "项目经理"],
+  ["木工施工", "木工交底", "项目经理、设计师"], ["木工施工", "木料进场", "项目经理"], ["木工施工", "木工施工", "项目经理"], ["木工施工", "木门量尺", "项目经理"], ["木工施工", "提醒定制量尺", "项目经理"], ["木工施工", "提醒木门量尺", "项目经理"], ["木工施工", "木工验收", "项目经理、设计师"], ["木工施工", "理石量尺", "店长"], ["木工施工", "统计利润", "会计"],
+  ["油工施工", "石膏顺平（7天）", "项目经理"], ["油工施工", "定制量尺下单（7天内完成）", "定制设计师"], ["油工施工", "收第三次装修款", "店长"], ["油工施工", "理石安装", "项目经理"], ["油工施工", "群内发定制出厂时间（20天）", "定制设计师"], ["油工施工", "晾干（7天）", "项目经理"], ["油工施工", "二、三遍腻子（2天）", "项目经理"], ["油工施工", "晾干（7天）", "项目经理"], ["油工施工", "打砂纸、喷漆", "项目经理"], ["油工施工", "油工验收、验收单签字", "项目经理"], ["油工施工", "统计利润", "会计"],
+  ["定制安装", "定制入场", "定制设计师"], ["定制安装", "定制安装（7天）", "定制设计师"], ["定制安装", "木门安装", "定制设计师"], ["定制安装", "理石量尺", "定制设计师、店长"], ["定制安装", "吊顶量尺", "项目经理"], ["定制安装", "定制补料", "定制设计师"], ["定制安装", "垃圾清理", "项目经理"], ["定制安装", "定制验收、验收单签字", "定制设计师、项目经理"],
+  ["收尾", "灯具安装", "项目经理"], ["收尾", "开关插座", "项目经理"], ["收尾", "烟机入场", "项目经理"], ["收尾", "热水器入场", "项目经理"], ["收尾", "撤防护", "项目经理"], ["收尾", "开荒保洁", "项目经理"], ["收尾", "整体验收、自检", "项目经理"], ["收尾", "找零（2天）", "项目经理"], ["收尾", "整体验收、签验收单", "项目经理、设计师"], ["收尾", "交尾款、签质保单", "店长"],
+  ["会计结算", "结账收尾款（5天）", "会计"],
 ] as const;
+
+const demoProjectRecords: ModuleRecord[] = [
+  { id: "demo-acceptance-water", candidate_id: "demo", kind: "acceptance", payload: { projectName: fullFlowDemoProject.name, phase: "水电", title: "水电验收", status: "已验收" }, created_at: "2026-08-18T00:00:00.000Z" },
+  { id: "demo-acceptance-tile", candidate_id: "demo", kind: "acceptance", payload: { projectName: fullFlowDemoProject.name, phase: "瓦工", title: "瓷砖验收", status: "已验收" }, created_at: "2026-08-18T00:00:00.000Z" },
+  { id: "demo-todo-carpentry", candidate_id: "demo", kind: "todo", payload: { projectName: fullFlowDemoProject.name, title: "木工完工后组织阶段验收", owner: "关丙刚、设计师", dueDate: "今天17:00", priority: "紧急", status: "待验收", sourceCount: 3, dataStatus: "demo" }, created_at: "2026-08-18T00:00:00.000Z" },
+  { id: "demo-todo-payment", candidate_id: "demo", kind: "todo", payload: { projectName: fullFlowDemoProject.name, title: "收第三次装修款并通知会计", owner: "店长", dueDate: "油工阶段开始前", priority: "重要", status: "未开始", dataStatus: "demo" }, created_at: "2026-08-18T00:00:00.000Z" },
+  { id: "demo-risk-material", candidate_id: "demo", kind: "risk", payload: { projectName: fullFlowDemoProject.name, title: "定制量尺时间待确认", riskLevel: "medium", status: "演示提醒", dataStatus: "demo" }, created_at: "2026-08-18T00:00:00.000Z" },
+];
 
 export function ProjectManagementPage() {
   const { user } = useAuth();
@@ -95,6 +117,7 @@ export function ProjectManagementPage() {
   const [keyword, setKeyword] = useState("");
   const [filter, setFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [overviewSelectedId, setOverviewSelectedId] = useState<string | null>(null);
   const [homeView, setHomeView] = useState<"projects" | "todos">("projects");
   const [tab, setTab] = useState<Tab>("overview");
   useEffect(() => {
@@ -110,9 +133,10 @@ export function ProjectManagementPage() {
       .catch(() => setRecordError("已确认工地记录暂时无法加载"));
   }, []);
   const projects = useMemo(
-    () => mergeProjectOverrides(data?.projects ?? [], overrides),
+    () => mergeProjectOverrides([fullFlowDemoProject, ...(data?.projects ?? []).filter((project) => project.id !== fullFlowDemoProject.id)], overrides),
     [data?.projects, overrides],
   );
+  const displayRecords = useMemo(() => [...demoProjectRecords, ...records], [records]);
   const filtered = useMemo(
     () =>
       projects.filter((project) => {
@@ -132,7 +156,7 @@ export function ProjectManagementPage() {
   const selected =
     projects.find((project) => project.id === selectedId) ?? null;
   const projectRecords = selected
-    ? records.filter((record) => projectRecordMatches(record, selected))
+    ? displayRecords.filter((record) => projectRecordMatches(record, selected))
     : [];
   if (isPending)
     return (
@@ -172,7 +196,7 @@ export function ProjectManagementPage() {
   const normal = projects.filter(
     (project) => project.delayDays <= 0 && project.riskLevel !== "high",
   ).length;
-  const todos = records.filter((record) =>
+  const todos = displayRecords.filter((record) =>
     ["todo", "todo_reminder"].includes(record.kind),
   );
   return (
@@ -258,62 +282,16 @@ export function ProjectManagementPage() {
       {recordError ? (
         <p className="project-inline-error">{recordError}</p>
       ) : null}
-      <div className="project-table" role="table" aria-label="工地列表">
-        <div className="project-table__head" role="row">
-          <span>工地</span>
-          <span>施工阶段</span>
-          <span>总进度</span>
-          <span>负责人</span>
-          <span>工期状态</span>
-          <span>风险</span>
-          <span>最近更新</span>
-          <span />
-        </div>
-        {filtered.map((project) => (
-          <button
-            type="button"
-            role="row"
-            className="project-row"
-            key={project.id}
-            onClick={() => {
-              setSelectedId(project.id);
-              setTab("overview");
-            }}
-          >
-            <span className="project-name">
-              <strong>{project.name}</strong>
-              <small>企业微信项目群已关联</small>
-            </span>
-            <span>{project.stage || "待识别"}</span>
-            <span className="progress-cell">
-              <i>
-                <b style={{ width: `${project.progress}%` }} />
-              </i>
-              <small>{project.progress}%</small>
-            </span>
-            <span>{project.ownerName}</span>
-            <span
-              className={
-                project.delayDays > 0 ? "text-warning" : "text-success"
-              }
-            >
-              {project.delayDays > 0 ? `延期 ${project.delayDays} 天` : "正常"}
-            </span>
-            <span>
-              <RiskBadge risk={project.riskLevel} />
-            </span>
-            <span>
-              {data.sourceFreshness.lastMessageAt
-                ? formatDate(data.sourceFreshness.lastMessageAt)
-                : "暂无"}
-            </span>
-            <ChevronRight size={16} />
-          </button>
-        ))}
-        {!filtered.length ? (
-          <div className="project-empty">没有符合当前筛选条件的工地</div>
-        ) : null}
-      </div>
+      <DashboardProjectOverview
+        projects={filtered}
+        records={displayRecords}
+        selectedId={overviewSelectedId}
+        onSelect={setOverviewSelectedId}
+        onOpen={(projectId) => {
+          setSelectedId(projectId);
+          setTab("overview");
+        }}
+      />
       <p className="project-source-note">
         当前列表来自阿里云会话存档关联的正式项目数据；Agent 推测必须确认后才会改变正式进度。
       </p>
@@ -330,6 +308,54 @@ export function ProjectManagementPage() {
       )}
     </section>
   );
+}
+
+const acceptanceByStage = [
+  "阶段启动", "水电验收", "防水验收", "瓷砖验收", "美缝验收",
+  "木工验收", "油工验收", "定制验收", "整体验收",
+] as const;
+
+function DashboardProjectOverview({ projects, records, selectedId, onSelect, onOpen }: {
+  projects: Project[];
+  records: ModuleRecord[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+  onOpen: (id: string) => void;
+}) {
+  const project = projects.find((item) => item.id === selectedId) ?? projects[0];
+  if (!project) return <div className="project-empty">没有符合当前筛选条件的工地</div>;
+  const current = constructionStageIndex(project.stage);
+  const projectRecords = records.filter((record) => projectRecordMatches(record, project));
+  const todos = projectRecords.filter((record) => ["todo", "todo_reminder"].includes(record.kind));
+  const risks = projectRecords.filter((record) => ["risk", "owner_alert"].includes(record.kind));
+  const focusNodes = scheduleNodes.filter(([stage]) => stage === constructionStages[current]?.name).slice(0, 3);
+  return <>
+    <div className="dashboard-project-grid">
+      <section className="dashboard-project-list">
+        <header><h2>工地列表</h2><small>{projects.length} 个工地</small></header>
+        {projects.map((item) => <button key={item.id} className={item.id === project.id ? "is-selected" : ""} onClick={() => onSelect(item.id)}>
+          <strong>{item.name}{item.status === "demo" ? <em>演示数据</em> : null}</strong><small>{item.ownerName} · {item.stage || "待识别"} · {item.progress}%</small>
+          <i><b style={{ width: `${item.progress}%` }} /></i>
+        </button>)}
+      </section>
+      <section className="dashboard-project-flow">
+        <header><div><h2>{project.name}{project.status === "demo" ? <em className="demo-project-tag">演示数据</em> : null}</h2><p>项目经理：{project.ownerName}　总工期：83天　当前进度：{project.progress}%</p></div><button onClick={() => onOpen(project.id)}>查看完整档案</button><strong className={project.delayDays > 0 ? "text-warning" : "text-success"}>● {project.delayDays > 0 ? `延期 ${project.delayDays} 天` : "正常施工"}</strong></header>
+        <div className="dashboard-stage-grid">
+          {constructionStages.map((stage, index) => {
+            const state = index < current ? "done" : index === current ? "current" : "pending";
+            const acceptance = projectRecords.find((record) => record.kind === "acceptance" && String(record.payload.phase || record.payload.title || "").includes(stage.name.replace("施工", "")));
+            const acceptanceState = acceptance ? "已验收" : state === "done" ? "待负责人汇报" : state === "current" ? "施工中" : "未开始";
+            return <div className={`dashboard-stage dashboard-stage--${state}`} key={stage.name}><div className="dashboard-stage-dot">{state === "done" ? "✓" : index + 1}</div><strong>{stage.name.replace("施工", "").replace("防护", "")}</strong><small>{stage.days}天</small><div className={`dashboard-acceptance ${acceptance ? "is-accepted" : state === "done" ? "is-waiting" : ""}`}><b>{acceptanceByStage[index]}</b><span>{acceptanceState}</span></div></div>;
+          })}
+        </div>
+      </section>
+    </div>
+    <div className="dashboard-project-foot">
+      <section><h2>近期节点</h2>{todos.slice(0, 3).map((record) => <div key={record.id}><b>{String(record.payload.title || record.payload.description || "待办事项")}</b><span>{String(record.payload.owner || "待分配")} · {String(record.payload.status || "待执行")}</span></div>)}{!todos.length ? <p>暂无已确认待办</p> : null}</section>
+      <section><h2>今日重点</h2>{focusNodes.map(([stage, title, owner], index) => <div key={`${stage}-${title}-${index}`}><b>{title}</b><span>{owner}</span></div>)}</section>
+      <section><h2>风险与提醒</h2><div><b className={risks.length ? "text-danger" : "text-success"}>{risks.length} 项风险</b><span>{risks.length ? "立即处理" : "暂无异常"}</span></div><div><b className="text-warning">{todos.filter((record) => !record.payload.owner).length} 项待分配</b><span>交待负责人</span></div></section>
+    </div>
+  </>;
 }
 
 function ProjectDetail({
