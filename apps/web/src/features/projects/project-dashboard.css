@@ -26,3 +26,35 @@
 @media(max-width:1100px){.dashboard-project-grid{grid-template-columns:1fr}.dashboard-project-list{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.dashboard-project-list>header{grid-column:1/-1}.dashboard-project-list>button{margin-top:0}.dashboard-stage-grid{grid-template-columns:repeat(2,minmax(260px,1fr))}}
 @media(max-width:767px){.dashboard-project-list,.dashboard-project-foot,.dashboard-stage-grid{grid-template-columns:1fr}.dashboard-project-flow{overflow:visible}.dashboard-stage{min-height:0}}
 .dashboard-project-list button strong em,.demo-project-tag{display:inline-flex;margin-left:7px;padding:2px 5px;border-radius:5px;background:rgba(226,174,85,.1);color:var(--sl-warning);font:normal 8px/1.2 sans-serif;vertical-align:middle}
+
+/* Readability pass: keep operational information comfortable at normal desktop zoom. */
+.project-home-tabs button{padding:11px 16px;font-size:14px}
+.dashboard-project-grid{grid-template-columns:300px minmax(0,1fr);gap:16px}
+.dashboard-project-list,.dashboard-project-flow,.dashboard-project-foot>section{padding:18px;border-radius:14px}
+.dashboard-project-list h2,.dashboard-project-flow h2,.dashboard-project-foot h2{font-size:20px}
+.dashboard-project-list header small{font-size:13px}
+.dashboard-project-list>button{margin-top:13px;padding:16px;border-radius:12px}
+.dashboard-project-list button strong{font-size:17px;line-height:1.35}
+.dashboard-project-list button small{margin-top:8px;font-size:13px;line-height:1.5}
+.dashboard-project-list button strong em,.demo-project-tag{padding:4px 7px;font-size:12px}
+.dashboard-project-flow>header{gap:8px 16px}.dashboard-project-flow>header p{margin-top:8px;font-size:14px;line-height:1.55}.dashboard-project-flow>header>button{padding:9px 12px;font-size:13px}.dashboard-project-flow>header>strong{font-size:14px}
+.dashboard-stage-grid{gap:14px;margin-top:24px}
+.dashboard-stage{min-height:320px;padding:16px;border-radius:12px}
+.dashboard-stage>header{grid-template-columns:38px 1fr auto;gap:11px}
+.dashboard-stage-dot{width:34px;height:34px;font-size:13px}
+.dashboard-stage header strong{font-size:16px;line-height:1.35}
+.dashboard-stage header small{margin-top:4px;font-size:12px;line-height:1.4}
+.dashboard-stage header em{padding:5px 8px;font-size:12px;line-height:1.2}
+.dashboard-stage-items{margin-top:13px}
+.dashboard-stage-items li{grid-template-columns:25px 1fr auto;gap:10px;padding:10px 0}
+.dashboard-stage-items li>span{width:22px;height:22px;font-size:12px}
+.dashboard-stage-items b{font-size:14px;line-height:1.45}
+.dashboard-stage-items small{margin-top:5px;font-size:12px;line-height:1.4}
+.dashboard-stage-items i{font-size:12px;line-height:1.45}
+.dashboard-acceptance{min-height:54px;padding:10px;margin-top:12px}
+.dashboard-acceptance b,.dashboard-acceptance span{font-size:12px;line-height:1.4}
+.dashboard-project-foot{gap:16px}.dashboard-project-foot section>div{padding:12px 0;font-size:13px;line-height:1.5}.dashboard-project-foot span,.dashboard-project-foot p{font-size:12px;line-height:1.5}
+.schedule-nodes summary{font-size:14px}.schedule-nodes summary span{font-size:12px}.schedule-node-table>div{min-height:50px;padding:10px 13px;font-size:13px}
+.all-project-todos>header span,.all-project-todos>header>div:last-child small{font-size:12px}.all-project-todos p{font-size:13px}.todo-table>div{min-height:66px;padding:12px 18px;font-size:13px}
+@media(max-width:1200px){.dashboard-project-grid{grid-template-columns:1fr}.dashboard-project-list{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:767px){.dashboard-project-list{grid-template-columns:1fr}.dashboard-stage{padding:14px}.dashboard-stage-items li{grid-template-columns:24px 1fr}.dashboard-stage-items i{grid-column:2}}
