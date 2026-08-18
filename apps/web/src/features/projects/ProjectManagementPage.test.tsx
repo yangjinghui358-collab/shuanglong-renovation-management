@@ -29,7 +29,12 @@ describe("ProjectManagementPage",()=>{
     expect(screen.getAllByText("美缝防护").length).toBeGreaterThan(0);
     expect(screen.getAllByText("收尾").length).toBeGreaterThan(0);
     expect(screen.getByText(/总工期 83 天/)).toBeInTheDocument();
-    expect(screen.getByText("70 个执行项")).toBeInTheDocument();
+    expect(screen.getByRole("region",{name:"施工进度全部环节"})).toBeInTheDocument();
+    expect(screen.getByText("70 项")).toBeInTheDocument();
+    expect(screen.getByText("签单、收定金、组建施工群")).toBeInTheDocument();
+    expect(screen.getByText("拆除墙体")).toBeInTheDocument();
+    expect(screen.getByText("水电验收、验收单签字")).toBeInTheDocument();
+    expect(screen.getByText("结账收尾款（5天）")).toBeInTheDocument();
     expect(screen.getAllByText("当前施工").length).toBeGreaterThan(0);
     expect(screen.getByText("下一阶段：")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button",{name:/验收记录/}));

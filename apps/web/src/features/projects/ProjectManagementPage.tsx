@@ -728,27 +728,38 @@ function ConstructionFlow({ project }: { project: Project }) {
 
 function ScheduleNodeTable({ project }: { project: Project }) {
   const current = constructionStageIndex(project.stage);
+  const stageSequences = new Map<string, number>();
   return (
-    <details className="schedule-nodes">
-      <summary>
-        查看 83 天完整节点 <span>{scheduleNodes.length} 个执行项</span>
-      </summary>
+    <section className="schedule-nodes" aria-label="施工进度全部环节">
+      <header>
+        <div>
+          <span>CONSTRUCTION ITEMS</span>
+          <h3>施工进度全部环节</h3>
+        </div>
+        <strong>{scheduleNodes.length} 项</strong>
+      </header>
       <div className="schedule-node-table">
         <div className="schedule-node-head">
-          <span>阶段</span><span>事项</span><span>负责人</span><span>状态</span>
+          <span>阶段</span><span>序号</span><span>项目名称</span><span>负责人</span><span>项目状态</span>
         </div>
         {scheduleNodes.map(([stage, title, owner], index) => {
           const stageIndex = constructionStages.findIndex((item) => item.name === stage);
-          const state = stageIndex < current ? "已完成" : stageIndex === current ? "进行中" : "未开始";
+          const sequence = (stageSequences.get(stage) ?? 0) + 1;
+          stageSequences.set(stage, sequence);
+          const state = stageIndex >= 0 && stageIndex < current
+            ? "已完成"
+            : stageIndex === current
+              ? "进行中"
+              : "未开始";
           return (
             <div key={`${stage}-${title}-${index}`}>
-              <span>{stage}</span><strong>{title}</strong><span>{owner}</span>
+              <span>{stage}</span><span>{sequence}</span><strong>{title}</strong><span>{owner}</span>
               <em data-state={state}>{state}</em>
             </div>
           );
         })}
       </div>
-    </details>
+    </section>
   );
 }
 
