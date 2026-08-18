@@ -58,3 +58,22 @@
 .all-project-todos>header span,.all-project-todos>header>div:last-child small{font-size:12px}.all-project-todos p{font-size:13px}.todo-table>div{min-height:66px;padding:12px 18px;font-size:13px}
 @media(max-width:1200px){.dashboard-project-grid{grid-template-columns:1fr}.dashboard-project-list{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:767px){.dashboard-project-list{grid-template-columns:1fr}.dashboard-stage{padding:14px}.dashboard-stage-items li{grid-template-columns:24px 1fr}.dashboard-stage-items i{grid-column:2}}
+
+/* Balance the page: project selector sits above a full-width, overflow-safe schedule. */
+.dashboard-project-grid{grid-template-columns:minmax(0,1fr);gap:16px;width:100%;min-width:0}
+.dashboard-project-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,320px));gap:12px;align-items:start}
+.dashboard-project-list>header{grid-column:1/-1}
+.dashboard-project-list>button{min-width:0;margin-top:0}
+.dashboard-project-flow{width:100%;min-width:0;overflow:hidden}
+.dashboard-project-flow>header{min-width:0}
+.dashboard-project-flow>header>div{min-width:0}
+.dashboard-stage-grid{grid-template-columns:repeat(3,minmax(0,1fr));width:100%;min-width:0}
+.dashboard-stage{width:100%;min-width:0;overflow:hidden}
+.dashboard-stage>header{grid-template-columns:38px minmax(0,1fr) auto;min-width:0}
+.dashboard-stage>header>div:nth-child(2){min-width:0}
+.dashboard-stage header strong,.dashboard-stage header small,.dashboard-stage-items b,.dashboard-stage-items small{overflow-wrap:anywhere}
+.dashboard-stage-items li{grid-template-columns:25px minmax(0,1fr) 56px;min-width:0}
+.dashboard-stage-items li>div{min-width:0}
+.dashboard-stage-items i{text-align:right}
+@media(max-width:1350px){.dashboard-stage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:767px){.dashboard-project-list,.dashboard-stage-grid{grid-template-columns:minmax(0,1fr)}.dashboard-stage-items li{grid-template-columns:24px minmax(0,1fr)}.dashboard-stage-items i{grid-column:2;text-align:left}}
