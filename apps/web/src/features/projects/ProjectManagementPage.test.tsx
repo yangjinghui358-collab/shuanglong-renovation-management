@@ -14,6 +14,9 @@ describe("ProjectManagementPage",()=>{
     expect(screen.getAllByText("全流程演示工地").length).toBeGreaterThan(0);
     expect(screen.getAllByText("演示数据").length).toBeGreaterThan(0);
     expect(screen.getAllByText("正式工地一号").length).toBeGreaterThan(0);
+    expect(screen.getByRole("article",{name:"开工准备施工明细"})).toHaveTextContent("签单、收定金、组建施工群");
+    expect(screen.getByRole("article",{name:"水电施工明细"})).toHaveTextContent("水电验收、验收单签字");
+    expect(screen.getByRole("article",{name:"收尾施工明细"})).toHaveTextContent("结账收尾款（5天）");
     await waitFor(()=>expect(screen.getByRole("button",{name:/所有工地待办/})).toBeInTheDocument());
     fireEvent.click(screen.getByRole("button",{name:/所有工地待办/}));
     expect(screen.getByRole("heading",{name:"所有工地待办"})).toBeInTheDocument();

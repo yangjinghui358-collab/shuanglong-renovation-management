@@ -345,7 +345,22 @@ function DashboardProjectOverview({ projects, records, selectedId, onSelect, onO
             const state = index < current ? "done" : index === current ? "current" : "pending";
             const acceptance = projectRecords.find((record) => record.kind === "acceptance" && String(record.payload.phase || record.payload.title || "").includes(stage.name.replace("施工", "")));
             const acceptanceState = acceptance ? "已验收" : state === "done" ? "待负责人汇报" : state === "current" ? "施工中" : "未开始";
-            return <div className={`dashboard-stage dashboard-stage--${state}`} key={stage.name}><div className="dashboard-stage-dot">{state === "done" ? "✓" : index + 1}</div><strong>{stage.name.replace("施工", "").replace("防护", "")}</strong><small>{stage.days}天</small><div className={`dashboard-acceptance ${acceptance ? "is-accepted" : state === "done" ? "is-waiting" : ""}`}><b>{acceptanceByStage[index]}</b><span>{acceptanceState}</span></div></div>;
+            const stageNodes = scheduleNodes.filter(([nodeStage]) => nodeStage === stage.name || (stage.name === "收尾" && nodeStage === "会计结算"));
+            return <article className={`dashboard-stage dashboard-stage--${state}`} key={stage.name} aria-label={`${stage.name}施工明细`}>
+              <header>
+                <div className="dashboard-stage-dot">{state === "done" ? "✓" : index + 1}</div>
+                <div><strong>{stage.name}</strong><small>{stage.days}天 · {stageNodes.length}项具体事项</small></div>
+                <em>{state === "done" ? "已完成" : state === "current" ? "施工中" : "未开始"}</em>
+              </header>
+              <ol className="dashboard-stage-items">
+                {stageNodes.map(([nodeStage, title, owner], nodeIndex) => <li key={`${nodeStage}-${title}-${nodeIndex}`}>
+                  <span>{nodeIndex + 1}</span>
+                  <div><b>{title}</b><small>{nodeStage === "会计结算" ? "会计结算 · " : ""}{owner}</small></div>
+                  <i>{state === "done" ? "已完成" : state === "current" ? "进行中" : "未开始"}</i>
+                </li>)}
+              </ol>
+              <div className={`dashboard-acceptance ${acceptance ? "is-accepted" : state === "done" ? "is-waiting" : ""}`}><b>{acceptanceByStage[index]}</b><span>{acceptanceState}</span></div>
+            </article>;
           })}
         </div>
       </section>
