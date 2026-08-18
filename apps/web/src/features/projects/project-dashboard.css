@@ -1,0 +1,22 @@
+.project-metrics.project-metrics--with-todos{grid-template-columns:repeat(5,1fr)}
+.project-home-tabs{display:flex;gap:5px;padding:5px;border:1px solid var(--sl-border);border-radius:11px;background:var(--sl-panel)}
+.project-home-tabs button{padding:9px 13px;border:0;border-radius:7px;background:transparent;color:var(--sl-muted);cursor:pointer}
+.project-home-tabs button.is-active{background:var(--sl-gold-soft);color:var(--sl-gold-bright)}
+.project-home-tabs strong{margin-left:5px;color:var(--sl-warning)}
+.schedule-nodes{margin-top:14px;border-top:1px solid var(--sl-border);padding-top:13px}
+.schedule-nodes summary{display:flex;justify-content:space-between;color:var(--sl-gold-bright);font-size:11px;cursor:pointer}
+.schedule-nodes summary span{color:var(--sl-muted);font-size:9px}
+.schedule-node-table{max-height:430px;margin-top:12px;overflow:auto;border:1px solid var(--sl-border);border-radius:9px}
+.schedule-node-table>div{display:grid;grid-template-columns:100px minmax(260px,1fr) 150px 75px;gap:10px;align-items:center;min-height:42px;padding:7px 11px;border-bottom:1px solid var(--sl-border-soft);font-size:10px}
+.schedule-node-table>div:last-child{border:0}.schedule-node-table .schedule-node-head{position:sticky;top:0;background:#18232c;color:var(--sl-muted);z-index:1}
+.schedule-node-table strong{font-weight:500}.schedule-node-table em{width:max-content;padding:3px 6px;border-radius:6px;background:rgba(255,255,255,.05);color:var(--sl-muted);font-style:normal}
+.schedule-node-table em[data-state="已完成"]{background:rgba(95,201,154,.1);color:var(--sl-success)}
+.schedule-node-table em[data-state="进行中"]{background:var(--sl-gold-soft);color:var(--sl-gold-bright)}
+.all-project-todos{border:1px solid var(--sl-border);border-radius:14px;background:var(--sl-panel);overflow:hidden}
+.all-project-todos>header{display:flex;justify-content:space-between;align-items:center;padding:18px;border-bottom:1px solid var(--sl-border)}
+.all-project-todos>header span{color:var(--sl-gold);font-size:9px;letter-spacing:.13em}.all-project-todos h2{margin:5px 0;font-size:18px}.all-project-todos p{margin:0;color:var(--sl-muted);font-size:10px}
+.all-project-todos>header>div:last-child{display:grid;grid-template-columns:auto auto;gap:3px 8px;text-align:right}.all-project-todos>header>div:last-child strong{color:var(--sl-gold-bright);font-size:18px}.all-project-todos>header>div:last-child small{color:var(--sl-muted);font-size:9px}
+.todo-table>div{display:grid;grid-template-columns:80px minmax(260px,1fr) 120px 120px 100px 100px;gap:12px;align-items:center;min-height:58px;padding:9px 16px;border-bottom:1px solid var(--sl-border-soft);font-size:10px}
+.todo-table .todo-table-head{min-height:40px;color:var(--sl-muted)}.todo-table>div>span:nth-child(2) strong,.todo-table>div>span:nth-child(2) small{display:block}.todo-table>div>span:nth-child(2) small{margin-top:4px;color:var(--sl-muted)}
+.todo-table button{padding:6px 8px;border:1px solid var(--sl-gold);border-radius:7px;background:var(--sl-gold-soft);color:var(--sl-gold-bright);cursor:pointer}.todo-table button:disabled{border-color:var(--sl-border);color:var(--sl-muted);cursor:not-allowed}.text-danger{color:var(--sl-danger)}
+@media(max-width:767px){.project-metrics.project-metrics--with-todos{grid-template-columns:1fr 1fr}.schedule-node-table,.todo-table{overflow-x:auto}.schedule-node-table>div{min-width:650px}.todo-table>div{min-width:760px}.all-project-todos>header{align-items:flex-start;gap:14px}}

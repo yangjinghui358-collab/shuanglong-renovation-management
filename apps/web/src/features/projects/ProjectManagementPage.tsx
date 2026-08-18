@@ -25,6 +25,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useOwnerDashboard } from "../dashboard/useOwnerDashboard";
 import "./project-management.css";
+import "./project-dashboard.css";
 
 type Project = OwnerDashboard["projects"][number];
 type ModuleRecord = {
@@ -60,16 +61,27 @@ const riskLabel = {
   high: "高风险",
 };
 const constructionStages = [
-  { name: "开工准备", description: "交底、保护、人员进场" },
-  { name: "拆除改造", description: "拆除、清运、结构改造" },
-  { name: "水电施工", description: "定位、布管、打压测试" },
-  { name: "防水施工", description: "找坡、刷胶、闭水试验" },
-  { name: "瓦工施工", description: "砌筑、找平、墙地砖" },
-  { name: "木工施工", description: "吊顶、造型、基层制作" },
-  { name: "油工施工", description: "基层、腻子、涂料施工" },
-  { name: "主材安装", description: "门柜、洁具、灯具安装" },
-  { name: "竣工验收", description: "联检、整改、客户验收" },
-  { name: "交付售后", description: "交付、归档、质保维护" },
+  { name: "开工准备", days: 7, description: "签单、效果图、交底、首次收款" },
+  { name: "水电", days: 7, description: "拆改、水电交底、施工与验收" },
+  { name: "防水", days: 6, description: "材料进场、防水施工与验收" },
+  { name: "瓦工施工", days: 7, description: "瓦工交底、铺贴、瓷砖验收" },
+  { name: "美缝防护", days: 6, description: "二次收款、美缝、地面保护" },
+  { name: "木工施工", days: 6, description: "木工交底、量尺、施工与验收" },
+  { name: "油工施工", days: 27, description: "腻子、晾干、喷漆、油工验收" },
+  { name: "定制安装", days: 10, description: "定制、木门、理石、吊顶安装验收" },
+  { name: "收尾", days: 5, description: "电器安装、保洁、验收与尾款" },
+] as const;
+
+const scheduleNodes = [
+  ["开工准备", "签单、收定金、组建施工群", "店长"], ["开工准备", "签单金额交给会计入账", "店长"], ["开工准备", "效果图（7天）", "设计师"], ["开工准备", "群内发电器清单", "设计师"], ["开工准备", "交钥匙、施工部交底（1天）", "设计师"], ["开工准备", "确认吉日开工时间", "设计师"], ["开工准备", "收第一次装修款", "店长"],
+  ["水电", "拆除墙体、垃圾清理、瓦工砌筑", "项目经理"], ["水电", "水电交底", "设计师"], ["水电", "水电施工", "项目经理"], ["水电", "水电验收、验收单签字", "项目经理、设计师"], ["水电", "统计利润", "会计"],
+  ["防水", "水泥沙子进场、防水施工", "项目经理"], ["防水", "陪客户选瓷砖、瓷砖排版", "设计师"], ["防水", "瓷砖进场、防水验收", "项目经理"],
+  ["瓦工施工", "瓦工交底", "项目经理、设计师"], ["瓦工施工", "瓦工铺贴、地漏止逆阀送货、垃圾清理", "项目经理"], ["瓦工施工", "瓷砖验收、验收单签字、返料", "项目经理、设计师"], ["瓦工施工", "统计利润", "会计"],
+  ["美缝防护", "收第二次装修款", "店长"], ["美缝防护", "美缝施工、验收、地面保护", "项目经理"], ["美缝防护", "提醒客户电器尺寸", "设计师"],
+  ["木工施工", "木工交底", "项目经理、设计师"], ["木工施工", "木料进场、木工施工", "项目经理"], ["木工施工", "木门、定制、理石量尺", "项目经理、店长"], ["木工施工", "木工验收", "项目经理、设计师"], ["木工施工", "统计利润", "会计"],
+  ["油工施工", "石膏顺平（7天）", "项目经理"], ["油工施工", "定制量尺下单（7天内完成）", "定制设计师"], ["油工施工", "收第三次装修款", "店长"], ["油工施工", "理石安装、腻子、晾干、打砂纸喷漆", "项目经理"], ["油工施工", "群内发定制出厂时间（20天）", "定制设计师"], ["油工施工", "油工验收、验收单签字", "项目经理"], ["油工施工", "统计利润", "会计"],
+  ["定制安装", "定制入场、安装、木门安装、补料", "定制设计师"], ["定制安装", "理石量尺", "定制设计师、店长"], ["定制安装", "吊顶量尺、垃圾清理", "项目经理"], ["定制安装", "定制验收、验收单签字", "定制设计师、项目经理"],
+  ["收尾", "灯具、开关插座、烟机、热水器入场安装", "项目经理"], ["收尾", "撤防护、开荒保洁、整体验收自检", "项目经理"], ["收尾", "找零（2天）、整体验收并签验收单", "项目经理、设计师"], ["收尾", "交尾款、签质保单", "店长"], ["收尾", "会计统计利润、结账收尾款（5天）", "会计"],
 ] as const;
 
 export function ProjectManagementPage() {
@@ -83,6 +95,7 @@ export function ProjectManagementPage() {
   const [keyword, setKeyword] = useState("");
   const [filter, setFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [homeView, setHomeView] = useState<"projects" | "todos">("projects");
   const [tab, setTab] = useState<Tab>("overview");
   useEffect(() => {
     fetch("/api/modules/projects/records")
@@ -159,6 +172,9 @@ export function ProjectManagementPage() {
   const normal = projects.filter(
     (project) => project.delayDays <= 0 && project.riskLevel !== "high",
   ).length;
+  const todos = records.filter((record) =>
+    ["todo", "todo_reminder"].includes(record.kind),
+  );
   return (
     <section className="projects-page">
       <header className="projects-heading">
@@ -175,7 +191,7 @@ export function ProjectManagementPage() {
           </Link>
         ) : null}
       </header>
-      <section className="project-metrics">
+      <section className="project-metrics project-metrics--with-todos">
         <Metric icon={HardHat} label="在建工地" value={projects.length} />
         <Metric
           icon={CheckCircle2}
@@ -190,7 +206,29 @@ export function ProjectManagementPage() {
           value={highRisk}
           tone="danger"
         />
+        <Metric
+          icon={ListTodo}
+          label="全部待办"
+          value={todos.length}
+          tone="warning"
+        />
       </section>
+      <nav className="project-home-tabs" aria-label="工地管理视图">
+        <button
+          className={homeView === "projects" ? "is-active" : ""}
+          onClick={() => setHomeView("projects")}
+        >
+          工地总览
+        </button>
+        <button
+          className={homeView === "todos" ? "is-active" : ""}
+          onClick={() => setHomeView("todos")}
+        >
+          所有工地待办 <strong>{todos.length}</strong>
+        </button>
+      </nav>
+      {homeView === "projects" ? (
+        <>
       <div className="project-toolbar">
         <label>
           <Search size={16} />
@@ -277,8 +315,19 @@ export function ProjectManagementPage() {
         ) : null}
       </div>
       <p className="project-source-note">
-        当前列表使用已关联的正式项目数据；Agent 推测必须确认后才会改变正式进度。
+        当前列表来自阿里云会话存档关联的正式项目数据；Agent 推测必须确认后才会改变正式进度。
       </p>
+        </>
+      ) : (
+        <AllProjectTodos
+          records={todos}
+          projects={projects}
+          onOpenProject={(projectId) => {
+            setSelectedId(projectId);
+            setTab("tasks");
+          }}
+        />
+      )}
     </section>
   );
 }
@@ -595,7 +644,7 @@ function ConstructionFlow({ project }: { project: Project }) {
         <div>
           <span>FULL CONSTRUCTION FLOW</span>
           <h2>整体施工流程</h2>
-          <p>从开工准备到交付售后，按阶段查看已完成、正在施工和下一步。</p>
+          <p>与《装修进度表-统一工期6天》一致：总工期 83 天，按阶段查看施工、验收和收款节点。</p>
         </div>
         <div>
           <strong>
@@ -623,7 +672,7 @@ function ConstructionFlow({ project }: { project: Project }) {
               </div>
               <div>
                 <strong>{stage.name}</strong>
-                <small>{stage.description}</small>
+                <small>{stage.days}天 · {stage.description}</small>
                 {state === "current" ? (
                   <em>当前施工</em>
                 ) : state === "done" ? (
@@ -636,16 +685,98 @@ function ConstructionFlow({ project }: { project: Project }) {
       </ol>
       <footer>
         <span>
-          当前：<strong>{constructionStages[current].name}</strong>
+          当前：<strong>{constructionStages[current]?.name || "开工准备"}</strong>
         </span>
         <ChevronRight size={14} />
         <span>
           下一阶段：
           <strong>
-            {constructionStages[current + 1]?.name || "项目已进入交付售后"}
+            {constructionStages[current + 1]?.name || "项目已进入结算归档"}
           </strong>
         </span>
       </footer>
+      <ScheduleNodeTable project={project} />
+    </section>
+  );
+}
+
+function ScheduleNodeTable({ project }: { project: Project }) {
+  const current = constructionStageIndex(project.stage);
+  return (
+    <details className="schedule-nodes">
+      <summary>
+        查看 83 天完整节点 <span>{scheduleNodes.length} 个执行项</span>
+      </summary>
+      <div className="schedule-node-table">
+        <div className="schedule-node-head">
+          <span>阶段</span><span>事项</span><span>负责人</span><span>状态</span>
+        </div>
+        {scheduleNodes.map(([stage, title, owner], index) => {
+          const stageIndex = constructionStages.findIndex((item) => item.name === stage);
+          const state = stageIndex < current ? "已完成" : stageIndex === current ? "进行中" : "未开始";
+          return (
+            <div key={`${stage}-${title}-${index}`}>
+              <span>{stage}</span><strong>{title}</strong><span>{owner}</span>
+              <em data-state={state}>{state}</em>
+            </div>
+          );
+        })}
+      </div>
+    </details>
+  );
+}
+
+function AllProjectTodos({
+  records,
+  projects,
+  onOpenProject,
+}: {
+  records: ModuleRecord[];
+  projects: Project[];
+  onOpenProject: (projectId: string) => void;
+}) {
+  const rows = records.map((record) => {
+    const projectName = String(record.payload.projectName || "待关联工地");
+    const project = projects.find(
+      (item) =>
+        item.name === projectName ||
+        item.id === String(record.payload.groupId || ""),
+    );
+    return {
+      record,
+      project,
+      projectName,
+      title: String(record.payload.title || record.payload.description || "待办事项"),
+      owner: String(record.payload.owner || record.payload.ownerName || "待分配"),
+      due: String(record.payload.due_date || record.payload.dueDate || "待确定"),
+      priority: String(record.payload.priority || "普通"),
+      status: String(record.payload.status || "待执行"),
+      evidence: Number(record.payload.sourceCount || record.payload.evidenceCount || 0),
+    };
+  });
+  const unassigned = rows.filter((row) => row.owner === "待分配").length;
+  return (
+    <section className="all-project-todos">
+      <header>
+        <div><span>CROSS-PROJECT TASKS</span><h2>所有工地待办</h2><p>由阿里云会话存档提炼并经确认的跨工地任务，统一查看负责人、期限和聊天证据。</p></div>
+        <div><strong>{rows.length}</strong><small>全部</small><strong>{unassigned}</strong><small>待分配</small></div>
+      </header>
+      {rows.length ? (
+        <div className="todo-table">
+          <div className="todo-table-head"><span>优先级</span><span>工地 / 事项</span><span>负责人</span><span>截止时间</span><span>状态</span><span>操作</span></div>
+          {rows.map(({ record, project, projectName, title, owner, due, priority, status, evidence }) => (
+            <div key={record.id}>
+              <span className={priority.includes("紧急") ? "text-danger" : ""}>{priority}</span>
+              <span><strong>{projectName}</strong><small>{title}{evidence ? ` · 群聊 ${evidence} 条证据` : ""}</small></span>
+              <span className={owner === "待分配" ? "text-warning" : ""}>{owner}</span>
+              <span>{due}</span><span>{status}</span>
+              <button disabled={!project} onClick={() => project && onOpenProject(project.id)}>{project ? "查看并交待" : "待关联"}</button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState icon={ListTodo} title="暂无已确认的跨工地待办" description="会话存档中的任务需经老板确认后才会进入这里；不会把 AI 推测直接当成施工指令。" />
+      )}
     </section>
   );
 }
@@ -871,22 +1002,21 @@ function constructionStageIndex(stage: string) {
   const value = String(stage || "").toLowerCase();
   const matches = [
     /准备|开工|交底/,
-    /拆除|拆改/,
-    /水电/,
+    /拆除|拆改|水电/,
     /防水/,
     /瓦工|泥工|贴砖/,
+    /美缝|防护/,
     /木工/,
     /油工|乳胶漆|涂料/,
-    /安装|主材|吊顶|橱柜|洁具/,
-    /竣工|验收/,
-    /交付|售后|保修/,
+    /定制|安装|主材|吊顶|橱柜|洁具/,
+    /收尾|竣工|交付|售后|保修/,
   ];
   const index = matches.findIndex((pattern) => pattern.test(value));
   return index < 0 ? 0 : index;
 }
 function nextConstructionStage(stage: string) {
   return (
-    constructionStages[constructionStageIndex(stage) + 1]?.name || "交付售后"
+    constructionStages[constructionStageIndex(stage) + 1]?.name || "结算归档"
   );
 }
 function kindLabel(kind: string) {
