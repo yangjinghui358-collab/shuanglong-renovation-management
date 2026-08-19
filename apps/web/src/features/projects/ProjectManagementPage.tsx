@@ -328,6 +328,11 @@ function DashboardProjectOverview({ projects, records, selectedId, onSelect, onO
   const projectRecords = records.filter((record) => projectRecordMatches(record, project));
   const todos = projectRecords.filter((record) => ["todo", "todo_reminder"].includes(record.kind));
   const risks = projectRecords.filter((record) => ["risk", "owner_alert"].includes(record.kind));
+  const progressRecords = projectRecords.filter((record) => record.kind === "construction_progress");
+  const scheduleStatusRecords = projectRecords.filter((record) =>
+    ["construction_progress", "todo", "todo_reminder"].includes(record.kind) && record.payload.scheduleItem,
+  );
+  const usesChatEvidence = progressRecords.length > 0;
   const focusNodes = scheduleNodes.filter(([stage]) => stage === constructionStages[current]?.name).slice(0, 3);
   return <>
     <div className="dashboard-project-grid">
@@ -342,7 +347,15 @@ function DashboardProjectOverview({ projects, records, selectedId, onSelect, onO
         <header><div><h2>{project.name}{project.status === "demo" ? <em className="demo-project-tag">演示数据</em> : null}</h2><p>项目经理：{project.ownerName}　总工期：83天　当前进度：{project.progress}%</p></div><button onClick={() => onOpen(project.id)}>查看完整档案</button><strong className={project.delayDays > 0 ? "text-warning" : "text-success"}>● {project.delayDays > 0 ? `延期 ${project.delayDays} 天` : "正常施工"}</strong></header>
         <div className="dashboard-stage-grid">
           {constructionStages.map((stage, index) => {
-            const state = index < current ? "done" : index === current ? "current" : "pending";
+            const stageProgress = scheduleStatusRecords.filter((record) => String(record.payload.phase || "") === stage.name);
+            const completedStageItems = stageProgress.filter((record) => progressRecordIsCompleted(record)).length;
+            const state = usesChatEvidence
+              ? index === current
+                ? "current"
+                : completedStageItems > 0 && completedStageItems === stageProgress.length
+                  ? "done"
+                  : "pending"
+              : index < current ? "done" : index === current ? "current" : "pending";
             const acceptance = projectRecords.find((record) => record.kind === "acceptance" && String(record.payload.phase || record.payload.title || "").includes(stage.name.replace("施工", "")));
             const acceptanceState = acceptance ? "已验收" : state === "done" ? "待负责人汇报" : state === "current" ? "施工中" : "未开始";
             const stageNodes = scheduleNodes.filter(([nodeStage]) => nodeStage === stage.name || (stage.name === "收尾" && nodeStage === "会计结算"));
@@ -353,11 +366,16 @@ function DashboardProjectOverview({ projects, records, selectedId, onSelect, onO
                 <em>{state === "done" ? "已完成" : state === "current" ? "施工中" : "未开始"}</em>
               </header>
               <ol className="dashboard-stage-items">
-                {stageNodes.map(([nodeStage, title, owner], nodeIndex) => <li key={`${nodeStage}-${title}-${nodeIndex}`}>
+                {stageNodes.map(([nodeStage, title, owner], nodeIndex) => {
+                  const progressRecord = scheduleStatusRecords.find((record) => String(record.payload.scheduleItem || "") === title);
+                  const itemState = progressRecord
+                    ? progressRecordIsCompleted(progressRecord) ? "已完成" : "待处理"
+                    : usesChatEvidence ? "待确认" : state === "done" ? "已完成" : state === "current" ? "进行中" : "未开始";
+                  return <li className={itemState === "已完成" ? "is-completed" : itemState === "待处理" ? "needs-attention" : ""} key={`${nodeStage}-${title}-${nodeIndex}`}>
                   <span>{nodeIndex + 1}</span>
                   <div><b>{title}</b><small>{nodeStage === "会计结算" ? "会计结算 · " : ""}{owner}</small></div>
-                  <i>{state === "done" ? "已完成" : state === "current" ? "进行中" : "未开始"}</i>
-                </li>)}
+                  <i data-state={itemState}>{itemState}</i>
+                </li>})}
               </ol>
               <div className={`dashboard-acceptance ${acceptance ? "is-accepted" : state === "done" ? "is-waiting" : ""}`}><b>{acceptanceByStage[index]}</b><span>{acceptanceState}</span></div>
             </article>;
@@ -990,6 +1008,10 @@ function projectRecordMatches(record: ModuleRecord, project: Project) {
     name === project.name ||
     String(record.payload.groupId || "") === project.id
   );
+}
+function progressRecordIsCompleted(record: ModuleRecord) {
+  const status = String(record.payload.status || "").toLowerCase();
+  return Boolean(record.payload.completed) || ["done", "completed", "已完成", "完成"].includes(status);
 }
 function mergeProjectOverrides(
   projects: Project[],

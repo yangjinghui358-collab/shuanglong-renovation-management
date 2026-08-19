@@ -77,3 +77,7 @@
 .dashboard-stage-items i{text-align:right}
 @media(max-width:1350px){.dashboard-stage-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:767px){.dashboard-project-list,.dashboard-stage-grid{grid-template-columns:minmax(0,1fr)}.dashboard-stage-items li{grid-template-columns:24px minmax(0,1fr)}.dashboard-stage-items i{grid-column:2;text-align:left}}
+.dashboard-stage-items li.is-completed b,.dashboard-stage-items i[data-state="已完成"]{color:var(--sl-success)}
+.dashboard-stage-items li.is-completed>span{background:rgba(95,201,154,.16);color:var(--sl-success)}
+.dashboard-stage-items li.needs-attention b,.dashboard-stage-items i[data-state="待处理"]{color:var(--sl-warning)}
+.dashboard-stage-items li.needs-attention>span{background:rgba(226,174,85,.14);color:var(--sl-warning)}
