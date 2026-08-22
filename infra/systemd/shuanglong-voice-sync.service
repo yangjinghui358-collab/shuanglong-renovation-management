@@ -1,0 +1,19 @@
+[Unit]
+Description=Synchronize and transcribe WeCom voice messages
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+TimeoutStartSec=300
+User=root
+Group=root
+WorkingDirectory=/opt/wecom-chat-pipeline
+EnvironmentFile=/etc/wecom-chat-pipeline/secrets.env
+ExecStart=/usr/bin/node /opt/wecom-chat-pipeline/scripts/sync-voice-transcripts.mjs
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/wecom-chat-pipeline/data
+UMask=0077

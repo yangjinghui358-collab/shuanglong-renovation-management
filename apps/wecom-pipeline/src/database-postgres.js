@@ -177,7 +177,12 @@ async function migrate(db) {
     ALTER TABLE media ADD COLUMN IF NOT EXISTS sdkfileid TEXT NOT NULL DEFAULT '';
     ALTER TABLE media ADD COLUMN IF NOT EXISTS source_format TEXT NOT NULL DEFAULT '';
     ALTER TABLE media ADD COLUMN IF NOT EXISTS error TEXT NOT NULL DEFAULT '';
+    ALTER TABLE media ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE media ADD COLUMN IF NOT EXISTS next_attempt_at TIMESTAMPTZ;
+    ALTER TABLE media ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
     ALTER TABLE media ADD COLUMN IF NOT EXISTS transcribed_at TIMESTAMPTZ;
+    CREATE INDEX IF NOT EXISTS idx_media_voice_queue
+      ON media(status,next_attempt_at,media_id) WHERE media_type='voice';
     CREATE TABLE IF NOT EXISTS group_projects (
       group_id TEXT PRIMARY KEY,
       project_name TEXT NOT NULL,

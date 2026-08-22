@@ -1,6 +1,7 @@
 [Unit]
 Description=Run queued management Agent request
-After=network-online.target postgresql.service shuanglong-management-api.service
+Requires=shuanglong-voice-sync.service
+After=network-online.target postgresql.service shuanglong-management-api.service shuanglong-voice-sync.service
 Wants=network-online.target
 
 [Service]
